@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_store_flutter/common/color_extension.dart';
 import 'package:grocery_store_flutter/view/login/welcome_view.dart';
+import 'package:grocery_store_flutter/view/main_tab/main_tab_view.dart';
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -25,7 +26,7 @@ class _SplashViewState extends State<SplashView> {
   void startApp() {
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const WelcomeView()),
+      MaterialPageRoute(builder: (context) => const MainTabView()),
       (route) => false,
     );
   }
