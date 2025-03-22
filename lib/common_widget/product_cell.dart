@@ -5,11 +5,15 @@ class ProductCell extends StatelessWidget {
   final Map pObj;
   final VoidCallback onPressed;
   final VoidCallback onCart;
+  final double margin;
+  final double weight;
   const ProductCell({
     super.key,
     required this.pObj,
     required this.onPressed,
     required this.onCart,
+    this.weight = 180,
+    this.margin = 8,
   });
 
   @override
@@ -17,8 +21,8 @@ class ProductCell extends StatelessWidget {
     return InkWell(
       onTap: onPressed,
       child: Container(
-        width: 180,
-        margin: EdgeInsets.symmetric(horizontal: 8),
+        width: weight,
+        margin: EdgeInsets.symmetric(horizontal: margin),
         padding: EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: Colors.white,
