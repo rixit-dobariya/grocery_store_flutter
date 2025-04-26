@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_store_flutter/common/color_extension.dart';
+import 'package:grocery_store_flutter/view/account/account_view.dart';
 import 'package:grocery_store_flutter/view/explore/explore_view.dart';
 import 'package:grocery_store_flutter/view/home/home_view.dart';
+import 'package:grocery_store_flutter/view/my_cart/my_cart_view.dart';
+import 'package:grocery_store_flutter/view/wishlist/wishlist_view.dart';
 
 class MainTabView extends StatefulWidget {
   const MainTabView({super.key});
@@ -39,9 +42,9 @@ class _MainTabViewState extends State<MainTabView>
         children: [
           const HomeView(),
           const ExploreView(),
-          Container(),
-          Container(),
-          Container(),
+          const MyCartView(),
+          const WishlistView(),
+          const AccountView(),
         ],
       ),
       bottomNavigationBar: Container(

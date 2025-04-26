@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:grocery_store_flutter/common_widget/explore_cell.dart';
 import 'package:grocery_store_flutter/common_widget/product_cell.dart';
 import 'package:grocery_store_flutter/view/explore/filter_view.dart';
 import '../../common/color_extension.dart';
@@ -59,7 +58,6 @@ class _ExploreDetailsViewState extends State<ExploreDetailsView> {
 
   @override
   Widget build(BuildContext context) {
-    var media = MediaQuery.sizeOf(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:grocery_store_flutter/common/color_extension.dart';
-import 'package:grocery_store_flutter/view/login/welcome_view.dart';
+import 'package:grocery_store_flutter/view/login/sign_in_view.dart';
 import 'package:grocery_store_flutter/view/main_tab/main_tab_view.dart';
 
 class SplashView extends StatefulWidget {
@@ -13,22 +15,26 @@ class SplashView extends StatefulWidget {
 class _SplashViewState extends State<SplashView> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     fireOpenApp();
   }
 
   void fireOpenApp() async {
-    await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(const Duration(seconds: 2));
     startApp();
   }
 
-  void startApp() {
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (context) => const MainTabView()),
-      (route) => false,
-    );
+  void startApp() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token != null && token.isNotEmpty) {
+      // Token exists → go to MainTabView using Get.offAll
+      Get.offAll(() => const MainTabView());
+    } else {
+      // Token not found → go to SignInView using Get.offAll
+      Get.offAll(() => const SignInView());
+    }
   }
 
   @override

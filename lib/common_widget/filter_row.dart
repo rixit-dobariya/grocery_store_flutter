@@ -44,6 +44,5 @@ class FilterRow extends StatelessWidget {
         ),
       ),
     );
-    ;
   }
 }

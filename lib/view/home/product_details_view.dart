@@ -11,6 +11,11 @@ class ProductDetailsView extends StatefulWidget {
 }
 
 class _ProductDetailsViewState extends State<ProductDetailsView> {
+  bool _isDetailsExpanded = false;
+  bool _isAddingToCart = false;
+  int _quantity = 1;
+  double _rating = 4.5;
+
   @override
   Widget build(BuildContext context) {
     var media = MediaQuery.sizeOf(context);
@@ -106,10 +111,15 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                     ),
                     const SizedBox(height: 15),
 
+                    // Quantity Selector Row
                     Row(
                       children: [
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            setState(() {
+                              if (_quantity > 1) _quantity--;
+                            });
+                          },
                           icon: Icon(
                             Icons.remove,
                             size: 25,
@@ -129,7 +139,7 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                             borderRadius: BorderRadius.all(Radius.circular(15)),
                           ),
                           child: Text(
-                            "1",
+                            "$_quantity",
                             style: TextStyle(
                               color: TColor.primaryText,
                               fontSize: 18,
@@ -138,7 +148,11 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            setState(() {
+                              _quantity++;
+                            });
+                          },
                           icon: Icon(
                             Icons.add,
                             size: 25,
@@ -159,6 +173,8 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                     const SizedBox(height: 15),
                     const Divider(color: Colors.black26, height: 1),
                     const SizedBox(height: 8),
+
+                    // Expandable Product Details Section
                     Row(
                       children: [
                         Expanded(
@@ -172,25 +188,34 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                           ),
                         ),
                         IconButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            setState(() {
+                              _isDetailsExpanded = !_isDetailsExpanded;
+                            });
+                          },
                           icon: Icon(
-                            Icons.keyboard_arrow_down_rounded,
+                            _isDetailsExpanded
+                                ? Icons.keyboard_arrow_down_rounded
+                                : Icons.keyboard_arrow_right_rounded,
                             size: 30,
                           ),
                         ),
                       ],
                     ),
-                    Text(
-                      "Apples Are Nutritious. Apples May Be Good For Weight Loss. Apples May Be Good For Your Heart. As Part Of A Healthful And Varied Diet.",
-                      style: TextStyle(
-                        color: TColor.secondaryText,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                    if (_isDetailsExpanded)
+                      Text(
+                        "Apples Are Nutritious. Apples May Be Good For Weight Loss. Apples May Be Good For Your Heart. As Part Of A Healthful And Varied Diet.",
+                        style: TextStyle(
+                          color: TColor.secondaryText,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
                     const SizedBox(height: 15),
                     const Divider(color: Colors.black26, height: 1),
                     const SizedBox(height: 8),
+
+                    // Nutritions Section
                     Row(
                       children: [
                         Expanded(
@@ -233,6 +258,8 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                     const SizedBox(height: 15),
                     const Divider(color: Colors.black26, height: 1),
                     const SizedBox(height: 8),
+
+                    // Review Section
                     Row(
                       children: [
                         Expanded(
@@ -248,7 +275,7 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                         IgnorePointer(
                           ignoring: true,
                           child: RatingBar.builder(
-                            initialRating: 5,
+                            initialRating: _rating,
                             minRating: 1,
                             direction: Axis.horizontal,
                             allowHalfRating: true,
@@ -260,7 +287,9 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                               color: Color(0xffF3603F),
                             ),
                             onRatingUpdate: (rating) {
-                              print(rating);
+                              setState(() {
+                                _rating = rating;
+                              });
                             },
                           ),
                         ),
@@ -275,29 +304,24 @@ class _ProductDetailsViewState extends State<ProductDetailsView> {
                       ],
                     ),
                     SizedBox(height: 8),
-                    RoundButton(
-                      title: "Add To Cart",
-                      onPressed: () {},
-                    ),
-                    // Text(
-                    //   "Login",
-                    //   style: TextStyle(
-                    //     fontSize: 26,
-                    //     fontWeight: FontWeight.bold,
-                    //   ),
-                    // ),
-                    // SizedBox(
-                    //   height: media.height * 0.01,
-                    // ),
-                    // Text(
-                    //   "Enter your email and password",
-                    //   style: TextStyle(
-                    //     fontSize: 16,
-                    //     fontWeight: FontWeight.normal,
-                    //     color: TColor.secondaryText,
-                    //   ),
-                    // ),
-                    // SizedBox(height: media.height * 0.05),
+
+                    // Add to Cart Button with Loading Indicator
+                    _isAddingToCart
+                        ? CircularProgressIndicator()
+                        : RoundButton(
+                            title: "Add To Cart",
+                            onPressed: () {
+                              setState(() {
+                                _isAddingToCart = true;
+                              });
+                              // Simulate add to cart action
+                              Future.delayed(Duration(seconds: 2), () {
+                                setState(() {
+                                  _isAddingToCart = false;
+                                });
+                              });
+                            },
+                          ),
                   ],
                 ),
               ),

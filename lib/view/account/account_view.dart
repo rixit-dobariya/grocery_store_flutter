@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:grocery_store_flutter/view/login/sign_in_view.dart';
 import 'package:grocery_store_flutter/view/account/about_view.dart';
 import 'package:grocery_store_flutter/view/account/contact_view.dart';
 import 'package:grocery_store_flutter/view/account/promo_code_view.dart';
@@ -23,12 +25,20 @@ class _AccountViewState extends State<AccountView> {
   final String userName = "Code For Any";
   final String userEmail = "codeforany@gmail.com";
 
-  // Dummy logout
-  void logout() {
-    // You can show a snackbar or print for now
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Logged out")),
+  void logout() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.remove('token');
+    await prefs.remove('userId');
+    Get.snackbar(
+      'Logged Out',
+      'You have been logged out successfully!',
+      backgroundColor: Colors.green,
+      colorText: Colors.white,
+      snackPosition: SnackPosition.BOTTOM,
+      duration: Duration(seconds: 2),
     );
+    Get.offAll(() => const SignInView());
   }
 
   @override

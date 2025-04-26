@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:grocery_store_flutter/common/color_extension.dart';
-import 'package:grocery_store_flutter/common_widget/round_button.dart';
 import 'package:grocery_store_flutter/view/login/sign_in_view.dart';
 
 class WelcomeView extends StatefulWidget {

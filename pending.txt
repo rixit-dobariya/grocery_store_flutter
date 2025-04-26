@@ -1,0 +1,24 @@
+Authentication:
+    - Google Authentication
+    - Register
+    - Login 
+    - Forget password
+    - active account
+
+Home:
+    - banners
+    -products
+    -categories
+
+Shop:
+    -categories
+    -filter
+    -search
+
+Wishlist
+
+Cart
+
+About
+
+Contact

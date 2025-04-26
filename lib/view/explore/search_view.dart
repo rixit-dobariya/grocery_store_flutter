@@ -50,7 +50,7 @@ class _SearchViewState extends State<SearchView> {
     },
     {
       "name": "Egg Noodles",
-      "icon": "assets/img/egg_noodles_new.png",
+      "icon": "assets/img/egg_noodies_new.png",
       "qty": "2",
       "unit": "Kg, Price",
       "price": "₹816.13" // Converted from $9.49
@@ -59,7 +59,6 @@ class _SearchViewState extends State<SearchView> {
 
   @override
   Widget build(BuildContext context) {
-    var media = MediaQuery.sizeOf(context);
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -69,7 +68,8 @@ class _SearchViewState extends State<SearchView> {
           },
           icon: Icon(
             Icons.chevron_left_rounded,
-            size: 25,
+            size: 30,
+            color: Colors.black,
           ),
         ),
         actions: [
@@ -82,7 +82,8 @@ class _SearchViewState extends State<SearchView> {
             },
             icon: Icon(
               Icons.filter_alt_rounded,
-              size: 25,
+              size: 27,
+              color: Colors.black,
             ),
           )
         ],
@@ -103,13 +104,11 @@ class _SearchViewState extends State<SearchView> {
               prefixIcon: Icon(
                 Icons.search_rounded,
                 size: 20,
-                color: Colors.black26,
               ),
               suffixIcon: IconButton(
                 icon: Icon(
                   Icons.close_rounded,
                   size: 20,
-                  color: Colors.black26,
                 ),
                 onPressed: () {
                   txtSearch.text = "";
@@ -136,7 +135,7 @@ class _SearchViewState extends State<SearchView> {
         ),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.75,
+          childAspectRatio: 0.65,
           crossAxisSpacing: 15,
           mainAxisSpacing: 15,
         ),
