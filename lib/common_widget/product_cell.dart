@@ -8,6 +8,7 @@ class ProductCell extends StatelessWidget {
   final VoidCallback onCart;
   final double margin;
   final double weight;
+  final bool isLoading;
 
   const ProductCell({
     super.key,
@@ -16,6 +17,7 @@ class ProductCell extends StatelessWidget {
     required this.onCart,
     this.weight = 180,
     this.margin = 8,
+    this.isLoading = false,
   });
 
   @override
@@ -102,19 +104,25 @@ class ProductCell extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                InkWell(
-                  onTap: onCart,
-                  child: Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: TColor.primary,
-                      borderRadius: BorderRadius.all(Radius.circular(15)),
-                    ),
-                    alignment: Alignment.center,
-                    child: Icon(Icons.add, size: 28, color: Colors.white),
-                  ),
-                ),
+                isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : InkWell(
+                        onTap: onCart,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: TColor.primary,
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                          ),
+                          alignment: Alignment.center,
+                          child: Icon(Icons.add, size: 28, color: Colors.white),
+                        ),
+                      ),
               ],
             ),
           ],

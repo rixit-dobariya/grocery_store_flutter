@@ -2,9 +2,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common/app_constants.dart';
-import 'package:grocery_store_flutter/models/category_model.dart';
+import 'package:grocery_store_flutter/controllers/cart_controller.dart';
+import 'package:grocery_store_flutter/controllers/category_controller.dart';
+import 'package:grocery_store_flutter/view/explore/search_view.dart';
 import 'package:http/http.dart' as http;
-
 import 'package:grocery_store_flutter/common_widget/category_cell.dart';
 import 'package:grocery_store_flutter/common_widget/product_cell.dart';
 import 'package:grocery_store_flutter/common_widget/section_view.dart';
@@ -25,13 +26,13 @@ class _HomeViewState extends State<HomeView> {
   List<dynamic> bannersArr = [];
   List<dynamic> exclusiveOfferArr = [];
   List<dynamic> bestSellingArr = [];
-  List<CategoryModel> groceriesArr = [];
-
+  final CartController cartController = Get.put(CartController());
+  final CategoryController categoryController = Get.put(CategoryController());
   @override
   void initState() {
     super.initState();
     fetchBanners();
-    fetchCategories();
+    categoryController.fetchCategories();
     fetchExclusiveOffers();
     fetchBestSellingProducts();
   }
@@ -39,7 +40,7 @@ class _HomeViewState extends State<HomeView> {
   Future<void> _onRefresh() async {
     await Future.wait([
       fetchBanners(),
-      fetchCategories(),
+      categoryController.fetchCategories(),
       fetchExclusiveOffers(),
       fetchBestSellingProducts(),
     ]);
@@ -105,29 +106,6 @@ class _HomeViewState extends State<HomeView> {
       }
     } catch (e) {
       showError("Error fetching banners: $e");
-    }
-  }
-
-  Future<void> fetchCategories() async {
-    try {
-      var url = Uri.parse('${AppConstants.baseUrl}/categories');
-      var response = await http.get(url);
-
-      if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-
-        if (mounted) {
-          setState(() {
-            groceriesArr = List<CategoryModel>.from(
-              data.map((category) => CategoryModel.fromJson(category)),
-            );
-          });
-        }
-      } else {
-        showError("Failed to load categories");
-      }
-    } catch (e) {
-      showError("Error fetching categories: $e");
     }
   }
 
@@ -226,7 +204,9 @@ class _HomeViewState extends State<HomeView> {
                   title: "Exclusive Offers",
                   padding:
                       const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.to(() => SearchView());
+                  },
                 ),
                 SizedBox(
                   height: 230,
@@ -240,12 +220,18 @@ class _HomeViewState extends State<HomeView> {
                           itemCount: exclusiveOfferArr.length,
                           itemBuilder: (context, index) {
                             var product = exclusiveOfferArr[index];
-                            return ProductCell(
-                              pObj: product,
-                              onPressed: () {
-                                Get.to(() => ProductDetailsView());
-                              },
-                              onCart: () {},
+                            return Obx(
+                              () => ProductCell(
+                                pObj: product,
+                                onPressed: () {
+                                  Get.to(() => ProductDetailsView());
+                                },
+                                onCart: () {
+                                  cartController.addToCart(product["_id"]);
+                                },
+                                isLoading: cartController.loadingProductIds
+                                    .contains(product["_id"]),
+                              ),
                             );
                           },
                         ),
@@ -256,7 +242,9 @@ class _HomeViewState extends State<HomeView> {
                   title: "Best Selling",
                   padding:
                       const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-                  onPressed: () {},
+                  onPressed: () {
+                    Get.to(() => SearchView());
+                  },
                 ),
                 SizedBox(
                   height: 230,
@@ -270,12 +258,18 @@ class _HomeViewState extends State<HomeView> {
                           itemCount: bestSellingArr.length,
                           itemBuilder: (context, index) {
                             var product = bestSellingArr[index];
-                            return ProductCell(
-                              pObj: product,
-                              onPressed: () {
-                                Get.to(() => ProductDetailsView());
-                              },
-                              onCart: () {},
+                            return Obx(
+                              () => ProductCell(
+                                pObj: product,
+                                onPressed: () {
+                                  Get.to(() => ProductDetailsView());
+                                },
+                                onCart: () {
+                                  cartController.addToCart(product["_id"]);
+                                },
+                                isLoading: cartController.loadingProductIds
+                                    .contains(product["_id"]),
+                              ),
                             );
                           },
                         ),
@@ -291,17 +285,23 @@ class _HomeViewState extends State<HomeView> {
                 ),
                 SizedBox(
                   height: 100,
-                  child: groceriesArr.isEmpty
+                  child: categoryController.categories.isEmpty
                       ? const Center(child: CircularProgressIndicator())
-                      : ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 15),
-                          itemCount: groceriesArr.length,
-                          itemBuilder: (context, index) {
-                            var category = groceriesArr[index];
-                            return CategoryCell(
-                              category: category,
-                              onPressed: () {},
+                      : Obx(
+                          () {
+                            return ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 15),
+                              itemCount: categoryController.categories.length,
+                              itemBuilder: (context, index) {
+                                var category =
+                                    categoryController.categories[index];
+                                return CategoryCell(
+                                  category: category,
+                                  onPressed: () {},
+                                );
+                              },
                             );
                           },
                         ),
