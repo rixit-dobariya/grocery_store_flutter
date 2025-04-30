@@ -6,6 +6,7 @@ class SectionView extends StatelessWidget {
   final bool isShowAllButton;
   final VoidCallback onPressed;
   final EdgeInsets? padding;
+
   const SectionView({
     super.key,
     required this.title,
@@ -16,8 +17,8 @@ class SectionView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: padding,
+    return Padding(
+      padding: padding ?? EdgeInsets.zero,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -29,17 +30,18 @@ class SectionView extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          TextButton(
-            onPressed: onPressed,
-            child: Text(
-              "See All",
-              style: TextStyle(
-                color: TColor.primary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+          if (isShowAllButton)
+            TextButton(
+              onPressed: onPressed,
+              child: Text(
+                "See All",
+                style: TextStyle(
+                  color: TColor.primary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
