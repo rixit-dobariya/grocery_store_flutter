@@ -224,7 +224,9 @@ class _HomeViewState extends State<HomeView> {
                               () => ProductCell(
                                 pObj: product,
                                 onPressed: () {
-                                  Get.to(() => ProductDetailsView());
+                                  Get.to(() => ProductDetailsView(
+                                        product: product,
+                                      ));
                                 },
                                 onCart: () {
                                   cartController.addToCart(product["_id"]);
@@ -262,7 +264,8 @@ class _HomeViewState extends State<HomeView> {
                               () => ProductCell(
                                 pObj: product,
                                 onPressed: () {
-                                  Get.to(() => ProductDetailsView());
+                                  Get.to(() =>
+                                      ProductDetailsView(product: product));
                                 },
                                 onCart: () {
                                   cartController.addToCart(product["_id"]);
