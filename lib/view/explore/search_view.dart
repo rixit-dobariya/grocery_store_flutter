@@ -151,7 +151,9 @@ class _SearchViewState extends State<SearchView> {
                   () => ProductCell(
                     pObj: product,
                     onPressed: () {
-                      Get.to(() => ProductDetailsView());
+                      Get.to(() => ProductDetailsView(
+                            product: product,
+                          ));
                     },
                     onCart: () {
                       cartController.addToCart(product["_id"]);
