@@ -188,7 +188,6 @@ class _SelectPromoCodeViewState extends State<SelectPromoCodeView> {
                               ElevatedButton(
                                 onPressed: () {
                                   onPromoSelected(promo); // Set in controller
-                                  Navigator.pop(context); // Go back to checkout
                                 },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: TColor.primary,

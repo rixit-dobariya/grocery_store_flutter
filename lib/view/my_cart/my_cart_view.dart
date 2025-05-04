@@ -7,7 +7,6 @@ import 'package:grocery_store_flutter/view/my_cart/checkout_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
 import 'package:grocery_store_flutter/controllers/checkout_controller.dart';
 
 class MyCartView extends StatefulWidget {
@@ -18,7 +17,7 @@ class MyCartView extends StatefulWidget {
 }
 
 class _MyCartViewState extends State<MyCartView> {
-  final checkoutController = Get.put(CheckoutController());
+  final checkoutController = Get.put(CheckoutController(), permanent: true);
 
   bool isLoading = true;
   bool hasError = false;
@@ -36,6 +35,7 @@ class _MyCartViewState extends State<MyCartView> {
     String? userId = sp.getString("userId");
 
     if (userId == null) {
+      if (!mounted) return;
       setState(() {
         hasError = true;
         isLoading = false;
@@ -52,11 +52,12 @@ class _MyCartViewState extends State<MyCartView> {
     try {
       final response = await http.get(Uri.parse(cartUrl));
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
         final List<dynamic> items = data['items'];
 
-        // Update CheckoutController
         checkoutController.cartItems.assignAll(items);
         checkoutController.calculateTotal();
 
@@ -75,6 +76,7 @@ class _MyCartViewState extends State<MyCartView> {
             snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         hasError = true;
         isLoading = false;
@@ -93,6 +95,7 @@ class _MyCartViewState extends State<MyCartView> {
     String? userId = sp.getString("userId");
     final url = '${AppConstants.baseUrl}/cart/$userId';
 
+    if (!mounted) return;
     setState(() {
       updatingMap[productId] = true;
     });
@@ -104,12 +107,16 @@ class _MyCartViewState extends State<MyCartView> {
         body: jsonEncode({'productId': productId, 'quantity': newQuantity}),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         await fetchCartData();
-        Get.snackbar('Success', 'Quantity updated',
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+        if (mounted) {
+          Get.snackbar('Success', 'Quantity updated',
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+              snackPosition: SnackPosition.BOTTOM);
+        }
       } else {
         Get.snackbar('Error', 'Failed to update quantity',
             backgroundColor: Colors.red,
@@ -117,12 +124,14 @@ class _MyCartViewState extends State<MyCartView> {
             snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
+      if (!mounted) return;
       Get.snackbar('Error', 'Error updating quantity',
           backgroundColor: Colors.red,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM);
     }
 
+    if (!mounted) return;
     setState(() {
       updatingMap[productId] = false;
     });
@@ -133,6 +142,7 @@ class _MyCartViewState extends State<MyCartView> {
     String? userId = sp.getString("userId");
     final url = '${AppConstants.baseUrl}/cart/$userId';
 
+    if (!mounted) return;
     setState(() {
       deletingMap[productId] = true;
     });
@@ -144,12 +154,16 @@ class _MyCartViewState extends State<MyCartView> {
         body: jsonEncode({'productId': productId}),
       );
 
+      if (!mounted) return;
+
       if (response.statusCode == 200) {
         await fetchCartData();
-        Get.snackbar('Success', 'Item removed',
-            backgroundColor: Colors.green,
-            colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+        if (mounted) {
+          Get.snackbar('Success', 'Item removed',
+              backgroundColor: Colors.green,
+              colorText: Colors.white,
+              snackPosition: SnackPosition.BOTTOM);
+        }
       } else {
         final data = jsonDecode(response.body);
         Get.snackbar('Error', data['message'] ?? 'Failed to remove item',
@@ -158,12 +172,14 @@ class _MyCartViewState extends State<MyCartView> {
             snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
+      if (!mounted) return;
       Get.snackbar('Error', 'Error removing item',
           backgroundColor: Colors.red,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM);
     }
 
+    if (!mounted) return;
     setState(() {
       deletingMap[productId] = false;
     });
@@ -204,6 +220,25 @@ class _MyCartViewState extends State<MyCartView> {
             Center(child: CircularProgressIndicator())
           else if (hasError)
             Center(child: Text('Failed to load cart data'))
+          else if (cartItems.isEmpty)
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_cart_outlined,
+                      size: 100, color: Colors.grey.shade400),
+                  SizedBox(height: 16),
+                  Text(
+                    "Your cart is empty",
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            )
           else
             ListView.separated(
               padding: const EdgeInsets.only(bottom: 80, left: 20, right: 20),

@@ -18,43 +18,51 @@ class ExploreCell extends StatelessWidget {
     try {
       color = Color(int.parse(category.color.replaceFirst('#', '0xFF')));
     } catch (_) {
-      color = TColor.primary; // fallback color
+      color = TColor.primary;
     }
 
     return InkWell(
-      borderRadius: const BorderRadius.all(Radius.circular(15)),
+      borderRadius: BorderRadius.circular(15),
       onTap: onPressed,
       child: Container(
-        padding: const EdgeInsets.all(15),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           border: Border.all(color: color, width: 1),
           color: color.withOpacity(0.25),
-          borderRadius: const BorderRadius.all(Radius.circular(15)),
+          borderRadius: BorderRadius.circular(15),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.network(
-              // assuming `image` is a URL
-              category.image,
-              height: 90,
-              width: 90,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.broken_image),
-            ),
-            const Spacer(),
-            Text(
-              category.name,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: TColor.primaryText,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const Spacer(),
-          ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Flexible(
+                  flex: 6,
+                  child: Image.network(
+                    category.image,
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Icon(Icons.broken_image, size: 50),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Flexible(
+                  flex: 3,
+                  child: Text(
+                    category.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: TColor.primaryText,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -36,6 +36,7 @@ class _WishlistViewState extends State<WishlistView> {
     if (userId != null) {
       fetchWishlist();
     } else {
+      if (!mounted) return;
       setState(() => isLoading = false);
       Get.snackbar('Error', 'User ID not found in SharedPreferences',
           backgroundColor: Colors.red,
@@ -49,6 +50,8 @@ class _WishlistViewState extends State<WishlistView> {
       final response = await http.get(
         Uri.parse('${AppConstants.baseUrl}/wishlist/$userId'),
       );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -67,6 +70,7 @@ class _WishlistViewState extends State<WishlistView> {
         setState(() => isLoading = false);
       }
     } catch (e) {
+      if (!mounted) return;
       Get.snackbar('Error', 'Server error',
           backgroundColor: Colors.red,
           colorText: Colors.white,
@@ -76,13 +80,17 @@ class _WishlistViewState extends State<WishlistView> {
   }
 
   void removeItem(String productId) async {
+    if (!mounted) return;
     setState(() => deletingProductIds.add(productId));
+
     try {
       final response = await http.delete(
         Uri.parse('${AppConstants.baseUrl}/wishlist/$userId/remove'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'productId': productId}),
       );
+
+      if (!mounted) return;
 
       if (response.statusCode == 200) {
         Get.snackbar('Success', 'Item removed from wishlist',
@@ -98,11 +106,13 @@ class _WishlistViewState extends State<WishlistView> {
             snackPosition: SnackPosition.BOTTOM);
       }
     } catch (e) {
+      if (!mounted) return;
       Get.snackbar('Error', 'Server error',
           backgroundColor: Colors.red,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM);
     } finally {
+      if (!mounted) return;
       setState(() => deletingProductIds.remove(productId));
     }
   }

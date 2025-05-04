@@ -100,14 +100,18 @@ class _CheckoutViewState extends State<CheckoutView> {
             ),
 
 // Discount
-            if (checkoutController.discountAmount.value > 0)
-              CheckoutRow(
-                title: "Promo Discount",
-                value:
-                    "- ₹${checkoutController.discountAmount.value.toStringAsFixed(2)}",
-                onPressed: () {},
-                isButton: false,
-              ),
+            Obx(() {
+              if (checkoutController.discountAmount.value > 0)
+                return CheckoutRow(
+                  title: "Promo Discount",
+                  value:
+                      "- ₹${checkoutController.discountAmount.value.toStringAsFixed(2)}",
+                  onPressed: () {},
+                  isButton: false,
+                );
+              else
+                return const SizedBox.shrink();
+            }),
 
             // Shipping
             CheckoutRow(
@@ -163,12 +167,30 @@ class _CheckoutViewState extends State<CheckoutView> {
                 ),
               ),
             ),
-            RoundButton(
-              title: "Place order",
-              onPressed: () {
-                Get.to(() => OrderAcceptView());
-              },
-            ),
+            Obx(() {
+              return checkoutController.isLoading.value
+                  ? CircularProgressIndicator()
+                  : RoundButton(
+                      title: "Place order",
+                      onPressed: () {
+                        if (checkoutController.selectedAddress.isEmpty) {
+                          Get.snackbar(
+                              "Error", "Please select a delivery address");
+                          return;
+                        }
+
+                        if (checkoutController.cartItems.isEmpty) {
+                          Get.snackbar("Error", "Cart is empty");
+                          return;
+                        }
+
+                        checkoutController
+                            .calculateTotal(); // Ensure pricing is up-to-date
+                        checkoutController
+                            .createRazorpayOrder(); // Starts the payment process
+                      },
+                    );
+            }),
             SizedBox(height: 15),
           ],
         );
