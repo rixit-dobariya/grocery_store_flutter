@@ -5,11 +5,13 @@ class CheckoutRow extends StatelessWidget {
   final String title;
   final String value;
   final VoidCallback onPressed;
+  final bool isButton;
   const CheckoutRow({
     super.key,
     required this.title,
     required this.value,
     required this.onPressed,
+    this.isButton = true,
   });
 
   @override
@@ -45,11 +47,12 @@ class CheckoutRow extends StatelessWidget {
                 SizedBox(
                   width: 15,
                 ),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 30,
-                  color: TColor.primaryText,
-                ),
+                if (isButton)
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 30,
+                    color: TColor.primaryText,
+                  ),
               ],
             ),
           ),

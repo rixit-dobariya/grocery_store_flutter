@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common/app_constants.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import 'package:grocery_store_flutter/common/color_extension.dart';
 import 'package:grocery_store_flutter/common_widget/cart_item_row.dart';
-import 'package:grocery_store_flutter/common_widget/round_button.dart';
 import 'package:grocery_store_flutter/view/my_cart/checkout_view.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:grocery_store_flutter/controllers/checkout_controller.dart';
 
 class MyCartView extends StatefulWidget {
   const MyCartView({super.key});
@@ -17,7 +18,8 @@ class MyCartView extends StatefulWidget {
 }
 
 class _MyCartViewState extends State<MyCartView> {
-  List cartArr = [];
+  final checkoutController = Get.put(CheckoutController());
+
   bool isLoading = true;
   bool hasError = false;
   Map<String, bool> updatingMap = {};
@@ -52,16 +54,22 @@ class _MyCartViewState extends State<MyCartView> {
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = json.decode(response.body);
+        final List<dynamic> items = data['items'];
+
+        // Update CheckoutController
+        checkoutController.cartItems.assignAll(items);
+        checkoutController.calculateTotal();
+
         setState(() {
-          cartArr = data['items'];
           isLoading = false;
+          hasError = false;
         });
       } else {
         setState(() {
           hasError = true;
           isLoading = false;
         });
-        Get.snackbar('Error', 'Failed to load cart data. Please try again.',
+        Get.snackbar('Error', 'Failed to load cart data.',
             backgroundColor: Colors.red,
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM);
@@ -71,25 +79,11 @@ class _MyCartViewState extends State<MyCartView> {
         hasError = true;
         isLoading = false;
       });
-      Get.snackbar(
-          'Error', 'An error occurred. Please check your internet connection.',
+      Get.snackbar('Error', 'Check your internet connection.',
           backgroundColor: Colors.red,
           colorText: Colors.white,
           snackPosition: SnackPosition.BOTTOM);
     }
-  }
-
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          message,
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.red, // Red color for errors
-        duration: Duration(seconds: 3),
-      ),
-    );
   }
 
   Future<void> updateQuantity(String productId, int newQuantity) async {
@@ -112,12 +106,12 @@ class _MyCartViewState extends State<MyCartView> {
 
       if (response.statusCode == 200) {
         await fetchCartData();
-        Get.snackbar('Success', 'Item quantity updated',
+        Get.snackbar('Success', 'Quantity updated',
             backgroundColor: Colors.green,
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM);
       } else {
-        Get.snackbar('Error', 'Failed to update item quantity',
+        Get.snackbar('Error', 'Failed to update quantity',
             backgroundColor: Colors.red,
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM);
@@ -152,7 +146,7 @@ class _MyCartViewState extends State<MyCartView> {
 
       if (response.statusCode == 200) {
         await fetchCartData();
-        Get.snackbar('Success', 'Item removed from cart',
+        Get.snackbar('Success', 'Item removed',
             backgroundColor: Colors.green,
             colorText: Colors.white,
             snackPosition: SnackPosition.BOTTOM);
@@ -175,8 +169,20 @@ class _MyCartViewState extends State<MyCartView> {
     });
   }
 
+  void showCheckout() {
+    showModalBottomSheet(
+      backgroundColor: Colors.transparent,
+      isDismissible: false,
+      isScrollControlled: true,
+      context: context,
+      builder: (context) => CheckoutView(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final cartItems = checkoutController.cartItems;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -185,10 +191,9 @@ class _MyCartViewState extends State<MyCartView> {
         title: Text(
           "My Cart",
           style: TextStyle(
-            color: TColor.primaryText,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
+              color: TColor.primaryText,
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
         ),
       ),
       backgroundColor: Colors.white,
@@ -201,96 +206,81 @@ class _MyCartViewState extends State<MyCartView> {
             Center(child: Text('Failed to load cart data'))
           else
             ListView.separated(
-                padding: const EdgeInsets.only(bottom: 50, left: 20, right: 20),
-                itemCount: cartArr.length,
-                separatorBuilder: (context, index) => Divider(
-                      height: 1,
-                      color: Colors.black26,
-                    ),
-                itemBuilder: (context, index) {
-                  var pObj = cartArr[index] as Map? ?? {};
-                  final productId = pObj['productId']['_id'];
-                  final isUpdating = updatingMap[productId] == true;
-                  final isDeleting = deletingMap[productId] == true;
+              padding: const EdgeInsets.only(bottom: 80, left: 20, right: 20),
+              itemCount: cartItems.length,
+              separatorBuilder: (context, index) =>
+                  Divider(height: 1, color: Colors.black26),
+              itemBuilder: (context, index) {
+                var pObj = cartItems[index] as Map? ?? {};
+                final productId = pObj['productId']['_id'];
+                final isUpdating = updatingMap[productId] == true;
+                final isDeleting = deletingMap[productId] == true;
 
-                  return CartItemRow(
-                    pObj: pObj,
-                    isUpdating: isUpdating,
-                    isDeleting: isDeleting,
-                    onRemove: () => removeCartItem(productId),
-                    onIncrease: () =>
-                        updateQuantity(productId, pObj['quantity'] + 1),
-                    onDecrease: () =>
-                        updateQuantity(productId, pObj['quantity'] - 1),
-                  );
-                }),
+                return CartItemRow(
+                  pObj: pObj,
+                  isUpdating: isUpdating,
+                  isDeleting: isDeleting,
+                  onRemove: () => removeCartItem(productId),
+                  onIncrease: () =>
+                      updateQuantity(productId, pObj['quantity'] + 1),
+                  onDecrease: () =>
+                      updateQuantity(productId, pObj['quantity'] - 1),
+                );
+              },
+            ),
           Padding(
             padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                MaterialButton(
-                  onPressed: () {
-                    showCheckout();
-                  },
-                  height: 60,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(19)),
-                  minWidth: double.maxFinite,
-                  elevation: 0.1,
-                  color: TColor.primary,
-                  child: Stack(
-                    alignment: Alignment.centerRight,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            "Go to Checkout",
+            child: Obx(
+              () => Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  MaterialButton(
+                    onPressed: () => showCheckout(),
+                    height: 60,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(19)),
+                    minWidth: double.infinity,
+                    color: TColor.primary,
+                    child: Stack(
+                      alignment: Alignment.centerRight,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Go to Checkout",
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.black12,
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          padding:
+                              EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                          child: Text(
+                            "₹${checkoutController.totalPrice.value.toStringAsFixed(2)}",
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 12,
                               fontWeight: FontWeight.w500,
                               color: Colors.white,
                             ),
                           ),
-                        ],
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black12,
-                          borderRadius: BorderRadius.circular(5),
-                        ),
-                        padding:
-                            EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                        child: Text(
-                          "₹500", // Update to dynamic value as required
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ],
+                        )
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           )
         ],
       ),
-    );
-  }
-
-  void showCheckout() {
-    showModalBottomSheet(
-      backgroundColor: Colors.transparent,
-      isDismissible: false,
-      isScrollControlled: true,
-      context: context,
-      builder: (context) {
-        return CheckoutView();
-      },
     );
   }
 }

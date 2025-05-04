@@ -97,7 +97,7 @@ class ProductCell extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  "₹${pObj["salePrice"]}",
+                  "₹${pObj["salePrice"] - pObj["salePrice"] * pObj["discount"] / 100}",
                   style: TextStyle(
                     color: TColor.primaryText,
                     fontSize: 18,

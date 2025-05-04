@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:grocery_store_flutter/view/account/write_review_view%20copy.dart';
 import '../../common_widget/order_item_row.dart';
 import '../../common_widget/popup_layout.dart';
 import '../../common/color_extension.dart';

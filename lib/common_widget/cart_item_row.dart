@@ -26,8 +26,8 @@ class CartItemRow extends StatelessWidget {
     final int salePrice = product['salePrice'] ?? 0;
     final int discount = product['discount'] ?? 0;
 
-    final int priceAfterDiscount = salePrice - discount;
-    final int totalPrice = priceAfterDiscount * quantity;
+    final priceAfterDiscount = salePrice - salePrice * discount / 100;
+    final totalPrice = priceAfterDiscount * quantity;
 
     return Container(
       height: 160,

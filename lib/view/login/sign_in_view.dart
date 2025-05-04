@@ -49,7 +49,7 @@ class _SignInViewState extends State<SignInView> {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('token', token);
           await prefs.setString('userId', userId);
-          await prefs.setString('email', txtEmail.text);
+          await prefs.setString('email', txtEmail.text);
           // Success
           Get.snackbar(
             'Success',

@@ -7,6 +7,9 @@ import 'package:grocery_store_flutter/common_widget/checkout_row.dart';
 import 'package:grocery_store_flutter/common_widget/round_button.dart';
 import 'package:grocery_store_flutter/view/my_cart/error_view.dart';
 import 'package:grocery_store_flutter/view/my_cart/order_accept_view.dart';
+import 'package:grocery_store_flutter/view/my_cart/select_address_view.dart';
+import 'package:grocery_store_flutter/view/my_cart/select_promo_code_view.dart';
+import '../../controllers/checkout_controller.dart';
 
 class CheckoutView extends StatefulWidget {
   const CheckoutView({super.key});
@@ -16,6 +19,8 @@ class CheckoutView extends StatefulWidget {
 }
 
 class _CheckoutViewState extends State<CheckoutView> {
+  final checkoutController = Get.put(CheckoutController());
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -23,149 +28,151 @@ class _CheckoutViewState extends State<CheckoutView> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+        ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: EdgeInsets.symmetric(vertical: 15),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Checkout",
-                  style: TextStyle(
-                    color: TColor.primaryText,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  icon: Icon(
-                    Icons.close_rounded,
-                    color: TColor.primaryText,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Divider(
-            height: 1,
-            color: Colors.black26,
-          ),
-          CheckoutRow(
-            title: "Delivery",
-            value: "Select method",
-            onPressed: () {},
-          ),
-          CheckoutRow(
-            title: "Promo Code",
-            value: "Select code",
-            onPressed: () {
-              // Navigator.push(
-              //   context
-              //   // MaterialPageRoute(
-              //   //   builder: (context) => PromoCodeView(),
-              //   // ),
-              // );
-            },
-          ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                child: Row(
-                  children: [
-                    Text(
-                      "Payment",
-                      style: TextStyle(
-                        color: TColor.secondaryText,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Spacer(),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 30,
-                      color: TColor.primaryText,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          CheckoutRow(
-            title: "Promo Code",
-            value: "Pick discount",
-            onPressed: () {},
-          ),
-          CheckoutRow(
-            title: "Total Cost",
-            value: "₹500.00",
-            onPressed: () {},
-          ),
-          Divider(
-            height: 1,
-            color: Colors.black26,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  color: TColor.secondaryText,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+      child: Obx(() {
+        final addressText = checkoutController.selectedAddress.isNotEmpty
+            ? "${checkoutController.selectedAddress['address'] ?? ''}, ..."
+            : "Select address";
+
+        final promoText = checkoutController.promoCode.isNotEmpty
+            ? "${checkoutController.promoCode['name'] ?? ''}"
+            : "Select code";
+
+        final shippingCost =
+            "₹${checkoutController.shippingCharge.value.toStringAsFixed(2)}";
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 15),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextSpan(
-                    text: "By continuing you agree to our",
-                  ),
-                  TextSpan(
-                    text: "Terms",
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        print("Terms of service clicked");
-                      },
+                  Text(
+                    "Checkout",
                     style: TextStyle(
                       color: TColor.primaryText,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  TextSpan(
-                    text: " and ",
-                  ),
-                  TextSpan(
-                    text: "Privacy Policy",
-                    recognizer: TapGestureRecognizer()
-                      ..onTap = () {
-                        print("Privacy policy clicked");
-                      },
-                    style: TextStyle(
+                  IconButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    icon: Icon(
+                      Icons.close_rounded,
                       color: TColor.primaryText,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-          RoundButton(
+            Divider(height: 1, color: Colors.black26),
+
+            // Address
+            CheckoutRow(
+              title: "Delivery",
+              value: addressText,
+              onPressed: () {
+                Get.to(() => SelectAddressView());
+              },
+            ),
+
+            // Promo code
+            CheckoutRow(
+              title: "Promo Code",
+              value: promoText,
+              onPressed: () {
+                Get.to(() => SelectPromoCodeView());
+              },
+            ),
+// Subtotal
+            CheckoutRow(
+              title: "Subtotal",
+              value: "₹${checkoutController.subtotal.value.toStringAsFixed(2)}",
+              onPressed: () {},
+              isButton: false,
+            ),
+
+// Discount
+            if (checkoutController.discountAmount.value > 0)
+              CheckoutRow(
+                title: "Promo Discount",
+                value:
+                    "- ₹${checkoutController.discountAmount.value.toStringAsFixed(2)}",
+                onPressed: () {},
+                isButton: false,
+              ),
+
+            // Shipping
+            CheckoutRow(
+              title: "Shipping",
+              value: shippingCost,
+              onPressed: () {},
+              isButton: false,
+            ),
+
+            // Total cost
+            CheckoutRow(
+              title: "Total Cost",
+              value:
+                  "₹${checkoutController.totalPrice.value.toStringAsFixed(2)}",
+              onPressed: () {},
+              isButton: false,
+            ),
+
+            Divider(height: 1, color: Colors.black26),
+
+            // Terms and Place Order Button
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    color: TColor.secondaryText,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  children: [
+                    const TextSpan(text: "By continuing you agree to our "),
+                    TextSpan(
+                      text: "Terms",
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => print("Terms of service clicked"),
+                      style: TextStyle(
+                        color: TColor.primaryText,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const TextSpan(text: " and "),
+                    TextSpan(
+                      text: "Privacy Policy",
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () => print("Privacy policy clicked"),
+                      style: TextStyle(
+                        color: TColor.primaryText,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            RoundButton(
               title: "Place order",
               onPressed: () {
-                Get.to(OrderAcceptView());
-              }),
-          SizedBox(height: 15),
-        ],
-      ),
+                Get.to(() => OrderAcceptView());
+              },
+            ),
+            SizedBox(height: 15),
+          ],
+        );
+      }),
     );
   }
 }
