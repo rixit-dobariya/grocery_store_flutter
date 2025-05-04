@@ -1,10 +1,15 @@
+import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../common_widget/line_textfield.dart';
-import '../../common_widget/round_button.dart';
-import 'change_password_view.dart';
-
+import 'package:grocery_store_flutter/common/app_constants.dart';
+import 'package:grocery_store_flutter/view/account/change_password_view.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as path;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../common/color_extension.dart';
+import '../../common_widget/round_button.dart';
 
 class MyDetailView extends StatefulWidget {
   const MyDetailView({super.key});
@@ -14,30 +19,158 @@ class MyDetailView extends StatefulWidget {
 }
 
 class _MyDetailViewState extends State<MyDetailView> {
-  final TextEditingController txtUsername = TextEditingController();
-  final TextEditingController txtName = TextEditingController();
-  final TextEditingController txtMobile = TextEditingController();
-  final TextEditingController txtCountryCode =
-      TextEditingController(); // For country code
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  late TextEditingController txtUsername;
+  late TextEditingController txtMobile;
+  late TextEditingController txtFirstName;
+  late TextEditingController txtLastName;
+
+  late String userId;
+  String? profilePictureUrl;
+  File? newProfileImage;
+
+  bool isLoading = false;
+  bool isSubmitting = false;
 
   @override
-  void dispose() {
-    // Dispose of controllers to prevent memory leaks
-    txtUsername.dispose();
-    txtName.dispose();
-    txtMobile.dispose();
-    txtCountryCode.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    txtUsername = TextEditingController();
+    txtFirstName = TextEditingController();
+    txtLastName = TextEditingController();
+    txtMobile = TextEditingController();
+    _loadUserData();
   }
 
-  // Function to update user details
-  void updateDetails() {
-    // Example: Update logic or API call can be added here
-    Navigator.pop(context); // Close the page after updating
+  Future<void> _loadUserData() async {
+    setState(() {
+      isLoading = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    userId = prefs.getString('userId') ?? "";
+
+    if (userId.isNotEmpty) {
+      final response =
+          await http.get(Uri.parse('${AppConstants.baseUrl}/users/$userId'));
+
+      if (response.statusCode == 200) {
+        final userData = json.decode(response.body);
+        setState(() {
+          txtUsername.text = userData['email'];
+          txtFirstName.text = userData['firstName'];
+          txtLastName.text = userData['lastName'];
+          txtMobile.text = userData['mobile'];
+          profilePictureUrl = userData['profilePicture'];
+        });
+      } else {
+        Get.snackbar(
+          'Error',
+          "Failed to fetch user data",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } else {
+      Get.snackbar(
+        'Error',
+        "User ID is not available",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final picked = await picker.pickImage(source: ImageSource.gallery);
+
+    if (picked != null) {
+      setState(() {
+        newProfileImage = File(picked.path);
+      });
+    }
+  }
+
+  Future<void> updateDetails() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      var uri = Uri.parse('${AppConstants.baseUrl}/users/$userId');
+      var request = http.MultipartRequest('PUT', uri);
+
+      request.fields['firstName'] = txtFirstName.text.trim();
+      request.fields['lastName'] = txtLastName.text.trim();
+      request.fields['mobile'] = txtMobile.text.trim();
+      request.fields['status'] = 'Active';
+
+      if (profilePictureUrl != null && profilePictureUrl!.isNotEmpty) {
+        request.fields['profilePicture'] = profilePictureUrl!;
+      }
+
+      if (newProfileImage != null) {
+        request.files.add(await http.MultipartFile.fromPath(
+          'profilePicture',
+          newProfileImage!.path,
+          filename: path.basename(newProfileImage!.path),
+        ));
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      if (response.statusCode == 200) {
+        Get.snackbar(
+          'Success',
+          "User details updated successfully",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+        Navigator.pop(context);
+      } else {
+        Get.snackbar(
+          'Error',
+          "Failed to update user details",
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        "Exception occurred: $e",
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      setState(() {
+        isSubmitting = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final displayImage = newProfileImage != null
+        ? FileImage(newProfileImage!)
+        : (profilePictureUrl == null || profilePictureUrl!.isEmpty)
+            ? const AssetImage("assets/img/default_profile.png")
+            : NetworkImage(profilePictureUrl!) as ImageProvider;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -46,11 +179,7 @@ class _MyDetailViewState extends State<MyDetailView> {
             onPressed: () {
               Navigator.pop(context);
             },
-            icon: Image.asset(
-              "assets/img/back.png",
-              width: 20,
-              height: 20,
-            )),
+            icon: Image.asset("assets/img/back.png", width: 20, height: 20)),
         centerTitle: true,
         title: Text(
           "My Details",
@@ -61,103 +190,128 @@ class _MyDetailViewState extends State<MyDetailView> {
         ),
       ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-          child: Column(
-            children: [
-              // Username field
-              LineTextField(
-                title: "Username",
-                placeholder: "Enter your username",
-                controller: txtUsername,
-              ),
-              const SizedBox(height: 15),
-
-              // Name field
-              LineTextField(
-                title: "Name",
-                placeholder: "Enter your name",
-                controller: txtName,
-              ),
-              const SizedBox(height: 15),
-
-              // Mobile number field with country code input
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Mobile Number",
-                    style: TextStyle(
-                        color: TColor.textTittle,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600),
-                  ),
-                  Row(
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
                     children: [
-                      // Country code text box
-                      Container(
-                        width:
-                            80, // Set a fixed width for the country code input
-                        child: TextField(
-                          controller: txtCountryCode,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            hintText: "+1", // Example country code
-                            hintStyle: TextStyle(
-                                color: TColor.placeholder, fontSize: 17),
-                            border: OutlineInputBorder(),
-                          ),
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: CircleAvatar(
+                          radius: 50,
+                          backgroundImage: displayImage,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextField(
-                          controller: txtMobile,
-                          keyboardType: TextInputType.phone,
-                          decoration: InputDecoration(
-                            hintText: "Mobile Number",
-                            hintStyle: TextStyle(
-                                color: TColor.placeholder, fontSize: 17),
-                            border: OutlineInputBorder(),
-                          ),
+                      const SizedBox(height: 10),
+                      Text("Tap to change profile picture",
+                          style: TextStyle(color: Colors.grey)),
+                      const SizedBox(height: 30),
+                      _buildTextFormField(
+                        title: "Email (Username)",
+                        placeholder: "Enter your email",
+                        controller: txtUsername,
+                        enabled: false,
+                        validator: null,
+                      ),
+                      const SizedBox(height: 15),
+                      _buildTextFormField(
+                        title: "First Name",
+                        placeholder: "Enter your first name",
+                        controller: txtFirstName,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'First name cannot be empty';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 15),
+                      _buildTextFormField(
+                        title: "Last Name",
+                        placeholder: "Enter your last name",
+                        controller: txtLastName,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Last name cannot be empty';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 15),
+                      _buildTextFormField(
+                        title: "Mobile Number",
+                        placeholder: "Enter your mobile number",
+                        controller: txtMobile,
+                        keyboardType: TextInputType.phone,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Mobile number cannot be empty';
+                          }
+                          if (value.length < 10) {
+                            return 'Enter a valid mobile number';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 25),
+                      isSubmitting
+                          ? CircularProgressIndicator()
+                          : RoundButton(
+                              title: "Update",
+                              onPressed: updateDetails,
+                            ),
+                      const SizedBox(height: 25),
+                      TextButton(
+                        onPressed: () {
+                          Get.to(() => ChangePasswordView());
+                        },
+                        child: Text(
+                          "Reset Password",
+                          style: TextStyle(
+                              decoration: TextDecoration.underline,
+                              color: TColor.primary),
                         ),
                       ),
                     ],
                   ),
-                  Container(
-                    width: double.maxFinite,
-                    height: 1,
-                    color: const Color(0xffE2E2E2),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 25),
-
-              // Update button
-              RoundButton(
-                title: "Update",
-                onPressed: updateDetails,
-              ),
-              const SizedBox(height: 40),
-
-              // Change password button
-              TextButton(
-                onPressed: () {
-                  Get.to(() => const ChangePasswordView());
-                },
-                child: Text(
-                  "Change Password",
-                  style: TextStyle(
-                      color: TColor.primary,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700),
                 ),
               ),
-            ],
+            ),
+    );
+  }
+
+  Widget _buildTextFormField({
+    required String title,
+    required String placeholder,
+    TextEditingController? controller,
+    bool enabled = true,
+    TextInputType keyboardType = TextInputType.text,
+    FormFieldValidator<String>? validator,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 5),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          keyboardType: keyboardType,
+          decoration: InputDecoration(
+            hintText: placeholder,
+            border: const OutlineInputBorder(),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
           ),
+          validator: validator,
         ),
-      ),
+      ],
     );
   }
 }
