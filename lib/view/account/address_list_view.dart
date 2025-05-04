@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:grocery_store_flutter/view/account/add_address_view.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/address_row.dart';
+import '../../controllers/address_controller.dart'; // Import the AddressController
 
 class AddressListView extends StatefulWidget {
   final Function(Map<String, dynamic>)? didSelect;
@@ -14,40 +15,19 @@ class AddressListView extends StatefulWidget {
 }
 
 class _AddressListViewState extends State<AddressListView> {
-  // Sample list of addresses, you can replace this with your dynamic data
-  List<Map<String, dynamic>> listArr = [
-    {
-      "name": "John Doe",
-      "phone": "+1234567890",
-      "address": "123, Elm Street, NY",
-      "city": "New York",
-      "state": "NY",
-      "postalCode": "10001",
-      "typeName": "Home"
-    },
-    {
-      "name": "Jane Smith",
-      "phone": "+0987654321",
-      "address": "456, Oak Avenue, LA",
-      "city": "Los Angeles",
-      "state": "CA",
-      "postalCode": "90001",
-      "typeName": "Office"
-    },
-    {
-      "name": "Alice Brown",
-      "phone": "+1122334455",
-      "address": "789, Pine Lane, SF",
-      "city": "San Francisco",
-      "state": "CA",
-      "postalCode": "94101",
-      "typeName": "Home"
-    },
-  ];
+  final AddressController addressController =
+      Get.put(AddressController()); // Initialize AddressController
+
+  @override
+  void initState() {
+    super.initState();
+    addressController.fetchAddresses(); // Fetch addresses when the page loads
+  }
 
   void removeAddress(int index) {
     setState(() {
-      listArr.removeAt(index);
+      addressController.addresses
+          .removeAt(index); // Update the list when an address is removed
     });
   }
 
@@ -79,7 +59,8 @@ class _AddressListViewState extends State<AddressListView> {
               await Get.to(() => AddAddressView(
                     isEdit: false, // Set to false for adding new address
                   ));
-              setState(() {}); // Refresh the list after adding a new address
+              addressController
+                  .fetchAddresses(); // Refresh the address list after adding a new address
             },
             icon: Image.asset(
               "assets/img/add.png",
@@ -91,39 +72,50 @@ class _AddressListViewState extends State<AddressListView> {
         ],
       ),
       backgroundColor: Colors.white,
-      body: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-        itemCount: listArr.length,
-        itemBuilder: (context, index) {
-          var address = listArr[index];
-          return AddressRow(
-            name: address["name"],
-            phone: address["phone"],
-            address: address["address"],
-            city: address["city"],
-            state: address["state"],
-            postalCode: address["postalCode"],
-            typeName: address["typeName"],
-            onTap: () {
-              // Call the function if it's not null
-              if (widget.didSelect != null) {
-                widget.didSelect!(address);
-                Navigator.pop(context);
-              }
-            },
-            didUpdateDone: () {
-              // Trigger the update callback after edit
-              setState(() {});
-            },
-            onRemove: () {
-              // Remove the address from the list
-              removeAddress(index);
-            },
-          );
-        },
-        separatorBuilder: (_, __) =>
-            const Divider(color: Colors.black12, height: 1),
-      ),
+      body: Obx(() {
+        // Make sure the addresses are being loaded
+        if (addressController.isLoading.value) {
+          return Center(child: CircularProgressIndicator());
+        }
+
+        if (addressController.addresses.isEmpty) {
+          return Center(child: Text('No addresses found.'));
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          itemCount: addressController.addresses.length,
+          itemBuilder: (context, index) {
+            var address = addressController
+                .addresses[index]; // Get address from the controller
+            return AddressRow(
+              name: address.fullName,
+              phone: address.phone,
+              address: address.address,
+              city: address.city,
+              state: address.state,
+              postalCode: address.pincode.toString(),
+              onTap: () {
+                // Call the function if it's not null
+                if (widget.didSelect != null) {
+                  widget.didSelect!(address.toJson());
+                  Navigator.pop(context);
+                }
+              },
+              didUpdateDone: () {
+                // Trigger the update callback after edit
+                setState(() {});
+              },
+              onRemove: () {
+                // Remove the address from the list
+                removeAddress(index);
+              },
+            );
+          },
+          separatorBuilder: (_, __) =>
+              const Divider(color: Colors.black12, height: 1),
+        );
+      }),
     );
   }
 }
