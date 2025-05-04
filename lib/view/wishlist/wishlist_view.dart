@@ -1,8 +1,13 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:grocery_store_flutter/common/color_extension.dart';
-import 'package:grocery_store_flutter/common_widget/cart_item_row.dart';
-import 'package:grocery_store_flutter/common_widget/round_button.dart';
-import 'package:grocery_store_flutter/common_widget/wishlist_row.dart';
+import 'package:get/get.dart';
+import 'package:grocery_store_flutter/common/app_constants.dart';
+import 'package:grocery_store_flutter/controllers/cart_controller.dart';
+import 'package:grocery_store_flutter/view/home/product_details_view.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../common_widget/wishlist_row.dart';
 
 class WishlistView extends StatefulWidget {
   const WishlistView({super.key});
@@ -12,90 +17,121 @@ class WishlistView extends StatefulWidget {
 }
 
 class _WishlistViewState extends State<WishlistView> {
-  List listArr = [
-    {
-      "name": "Sprite Can",
-      "icon": "assets/img/sprite_can.png",
-      "qty": "325",
-      "unit": "mL, Price",
-      "price": "₹124"
-    },
-    {
-      "name": "Diet Coke",
-      "icon": "assets/img/diet_coke.png",
-      "qty": "355",
-      "unit": "mL, Price",
-      "price": "₹124"
-    },
-    {
-      "name": "Apple & Grape Juice",
-      "icon": "assets/img/juice_apple_grape.png",
-      "qty": "2",
-      "unit": "L, Price",
-      "price": "₹1249"
-    },
-    {
-      "name": "Coca Cola Can",
-      "icon": "assets/img/cocacola_can.png",
-      "qty": "325",
-      "unit": "mL, Price",
-      "price": "₹414"
-    },
-    {
-      "name": "Pepsi Can",
-      "icon": "assets/img/pepsi_can.png",
-      "qty": "325",
-      "unit": "mL, Price",
-      "price": "₹372"
+  List<dynamic> products = [];
+  bool isLoading = true;
+  String? userId;
+  Set<String> deletingProductIds = {};
+  final CartController cartController = Get.put(CartController());
+
+  @override
+  void initState() {
+    super.initState();
+    loadUserId();
+  }
+
+  Future<void> loadUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    userId = prefs.getString('userId');
+
+    if (userId != null) {
+      fetchWishlist();
+    } else {
+      setState(() => isLoading = false);
+      Get.snackbar('Error', 'User ID not found in SharedPreferences',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM);
     }
-  ];
+  }
+
+  Future<void> fetchWishlist() async {
+    try {
+      final response = await http.get(
+        Uri.parse('${AppConstants.baseUrl}/wishlist/$userId'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final wishlist = data['wishlist'];
+
+        setState(() {
+          products = wishlist['productIds'];
+          isLoading = false;
+        });
+      } else {
+        final data = jsonDecode(response.body);
+        Get.snackbar('Error', data['message'] ?? 'Failed to load wishlist',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM);
+        setState(() => isLoading = false);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Server error',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM);
+      setState(() => isLoading = false);
+    }
+  }
+
+  void removeItem(String productId) async {
+    setState(() => deletingProductIds.add(productId));
+    try {
+      final response = await http.delete(
+        Uri.parse('${AppConstants.baseUrl}/wishlist/$userId/remove'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'productId': productId}),
+      );
+
+      if (response.statusCode == 200) {
+        Get.snackbar('Success', 'Item removed from wishlist',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM);
+        fetchWishlist();
+      } else {
+        final data = jsonDecode(response.body);
+        Get.snackbar('Error', data['message'] ?? 'Failed to remove item',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+            snackPosition: SnackPosition.BOTTOM);
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Server error',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+          snackPosition: SnackPosition.BOTTOM);
+    } finally {
+      setState(() => deletingProductIds.remove(productId));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0.5,
-        centerTitle: true,
-        title: Text(
-          "Wishlist",
-          style: TextStyle(
-            color: TColor.primaryText,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      backgroundColor: Colors.white,
-      body: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          ListView.separated(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-            itemCount: listArr.length,
-            separatorBuilder: (context, index) => Divider(
-              height: 1,
-              color: Colors.black26,
-            ),
-            itemBuilder: (context, index) {
-              var pObj = listArr[index] as Map? ?? {};
-              return WishlistRow(
-                pObj: pObj,
-                onPressed: () {},
-              );
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                RoundButton(title: "Add all to cart", onPressed: () {}),
-              ],
-            ),
-          )
-        ],
-      ),
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (products.isEmpty) {
+      return const Center(child: Text('Your wishlist is empty'));
+    }
+
+    return ListView.builder(
+      itemCount: products.length,
+      itemBuilder: (context, index) {
+        final product = products[index];
+        return Obx(() => WishlistRow(
+              product: product,
+              onPressed: () => removeItem(product["_id"]),
+              onViewDetails: () =>
+                  Get.to(() => ProductDetailsView(product: product)),
+              onAddToCart: () => cartController.addToCart(product["_id"]),
+              isAddToCartLoading:
+                  cartController.loadingProductIds.contains(product["_id"]),
+              isDeleteLoading: deletingProductIds.contains(product["_id"]),
+            ));
+      },
     );
   }
 }

@@ -1,51 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common_widget/explore_cell.dart';
+import 'package:grocery_store_flutter/controllers/category_controller.dart';
+import 'package:grocery_store_flutter/models/category_model.dart';
 import 'package:grocery_store_flutter/view/explore/explore_detail_view.dart';
 import 'package:grocery_store_flutter/view/explore/search_view.dart';
 import '../../common/color_extension.dart';
 
 class ExploreView extends StatefulWidget {
   const ExploreView({super.key});
+
   @override
   State<ExploreView> createState() => _ExploreViewState();
 }
 
 class _ExploreViewState extends State<ExploreView> {
-  TextEditingController txtSearch = TextEditingController();
-  bool isVisible = false;
+  final CategoryController categoryController = Get.put(CategoryController());
 
-  List findProductArr = [
-    {
-      "name": "Fresh Fruits & Vegetables",
-      "icon": "assets/img/frash_fruits.png",
-      "color": const Color(0xFF5B1B75),
-    },
-    {
-      "name": "Cooking Oil & Ghee",
-      "icon": "assets/img/cooking_oil.png",
-      "color": const Color(0xFFB4A04C),
-    },
-    {
-      "name": "Meat & Fish",
-      "icon": "assets/img/meat_fish.png",
-      "color": const Color(0xFF7FA359),
-    },
-    {
-      "name": "Bakery & Snacks",
-      "icon": "assets/img/bakery_snacks.png",
-      "color": const Color(0xFFD3B0E0),
-    },
-    {
-      "name": "Dairy & Eggs",
-      "icon": "assets/img/dairy_eggs.png",
-      "color": const Color(0xFFDED5E9),
-    },
-    {
-      "name": "Beverages",
-      "icon": "assets/img/beverages.png",
-      "color": const Color(0xFFB7DFF5),
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    categoryController.fetchCategories();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -79,18 +56,14 @@ class _ExploreViewState extends State<ExploreView> {
                 height: 45,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Color(0xffF2F3F2),
+                  color: const Color(0xffF2F3F2),
                   borderRadius: BorderRadius.circular(15),
                 ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Padding(
+                    const Padding(
                       padding: EdgeInsets.all(13),
-                      child: Icon(
-                        Icons.search_rounded,
-                        size: 20,
-                      ),
+                      child: Icon(Icons.search_rounded, size: 20),
                     ),
                     Text(
                       "Search store",
@@ -105,38 +78,34 @@ class _ExploreViewState extends State<ExploreView> {
               ),
             ),
           ),
-          SizedBox(
-            height: 15,
-          ),
+          const SizedBox(height: 15),
           Expanded(
-            child: GridView.builder(
-              padding: EdgeInsets.symmetric(
-                vertical: 0,
-                horizontal: 20,
-              ),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.95,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-              ),
-              itemCount: findProductArr.length,
-              itemBuilder: (context, index) {
-                var eObj = findProductArr[index] as Map? ?? {};
-                return ExploreCell(
-                  pObj: eObj,
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ExploreDetailsView(eObj: eObj),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          )
+            child: Obx(() {
+              if (categoryController.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              return GridView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.95,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                ),
+                itemCount: categoryController.categories.length,
+                itemBuilder: (context, index) {
+                  final category = categoryController.categories[index];
+                  return ExploreCell(
+                    category: category,
+                    onPressed: () {
+                      Get.to(() => ExploreDetailsView(category: category));
+                    },
+                  );
+                },
+              );
+            }),
+          ),
         ],
       ),
     );

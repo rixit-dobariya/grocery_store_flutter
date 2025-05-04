@@ -11,7 +11,6 @@ class AddressRow extends StatelessWidget {
   final String city;
   final String state;
   final String postalCode;
-  final String typeName;
   final VoidCallback didUpdateDone;
   final VoidCallback onTap;
   final VoidCallback onRemove;
@@ -24,7 +23,6 @@ class AddressRow extends StatelessWidget {
     required this.city,
     required this.state,
     required this.postalCode,
-    required this.typeName,
     required this.onTap,
     required this.didUpdateDone,
     required this.onRemove,
@@ -60,20 +58,6 @@ class AddressRow extends StatelessWidget {
                                 fontWeight: FontWeight.w700),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                              color: TColor.secondaryText.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(5)),
-                          child: Text(
-                            typeName,
-                            style: TextStyle(
-                                color: TColor.secondaryText,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w700),
-                          ),
-                        )
                       ],
                     ),
                     const SizedBox(
@@ -102,40 +86,39 @@ class AddressRow extends StatelessWidget {
                 ),
               ),
             ),
-            Column(
-              children: [
-                IconButton(
-                  onPressed: () async {
-                    // Navigate to AddAddressView for editing
-                    await Get.to(() => AddAddressView(
-                          initialName: name,
-                          initialPhone: phone,
-                          initialAddress: address,
-                          initialCity: city,
-                          initialState: state,
-                          initialPostalCode: postalCode,
-                          initialType: typeName,
-                          isEdit: true,
-                        ));
-                    // Trigger the update callback after edit
-                    didUpdateDone();
-                  },
-                  icon: Icon(
-                    Icons.edit,
-                    color: TColor.primary,
-                    size: 20,
-                  ),
-                ),
-                IconButton(
-                  onPressed: onRemove,
-                  icon: Image.asset(
-                    "assets/img/close.png",
-                    width: 15,
-                    height: 15,
-                  ),
-                ),
-              ],
-            )
+            // Column(
+            //   children: [
+            //     IconButton(
+            //       onPressed: () async {
+            //         // Navigate to AddAddressView for editing
+            //         await Get.to(() => AddAddressView(
+            //               initialName: name,
+            //               initialPhone: phone,
+            //               initialAddress: address,
+            //               initialCity: city,
+            //               initialState: state,
+            //               initialPostalCode: postalCode,
+            //               isEdit: true,
+            //             ));
+            //         // Trigger the update callback after edit
+            //         didUpdateDone();
+            //       },
+            //       icon: Icon(
+            //         Icons.edit,
+            //         color: TColor.primary,
+            //         size: 20,
+            //       ),
+            //     ),
+            //     IconButton(
+            //       onPressed: onRemove,
+            //       icon: Image.asset(
+            //         "assets/img/close.png",
+            //         width: 15,
+            //         height: 15,
+            //       ),
+            //     ),
+            //   ],
+            // )
           ],
         ),
       ),
