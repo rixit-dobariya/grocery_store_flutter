@@ -147,18 +147,36 @@ class _HomeViewState extends State<HomeView> {
                       color: const Color(0xffF2F3F2),
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: TextField(
-                      controller: txtSearch,
-                      decoration: InputDecoration(
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 15),
-                        prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                        border: InputBorder.none,
-                        hintText: "Search",
-                        hintStyle: TextStyle(
-                          color: TColor.placeholder,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
+                    child: InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SearchView()),
+                        );
+                      },
+                      child: Container(
+                        height: 45,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: const Color(0xffF2F3F2),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        child: Row(
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.all(13),
+                              child: Icon(Icons.search_rounded, size: 20),
+                            ),
+                            Text(
+                              "Search store",
+                              style: TextStyle(
+                                color: TColor.placeholder,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

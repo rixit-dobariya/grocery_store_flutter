@@ -38,7 +38,7 @@ class FilterController extends GetxController {
           finalPrice >= minPrice.value && finalPrice <= maxPrice.value;
 
       bool categoryMatch = selectedCategories.isEmpty ||
-          selectedCategories.contains(product['categoryId']);
+          selectedCategories.contains(product['categoryId']["_id"]);
 
       bool keywordMatch = true;
       if (searchQuery.value.isNotEmpty) {

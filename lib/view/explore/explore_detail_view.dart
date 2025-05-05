@@ -63,16 +63,16 @@ class _ExploreDetailsViewState extends State<ExploreDetailsView> {
           icon: const Icon(Icons.chevron_left_rounded,
               size: 25, color: Colors.black),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => FilterView()));
-            },
-            icon: const Icon(Icons.filter_alt_rounded,
-                size: 25, color: Colors.black),
-          )
-        ],
+        // actions: [
+        //   IconButton(
+        //     onPressed: () {
+        //       Navigator.push(context,
+        //           MaterialPageRoute(builder: (context) => FilterView()));
+        //     },
+        //     icon: const Icon(Icons.filter_alt_rounded,
+        //         size: 25, color: Colors.black),
+        //   )
+        // ],
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
