@@ -9,6 +9,7 @@ import 'package:grocery_store_flutter/common_widget/product_cell.dart';
 import 'package:grocery_store_flutter/view/explore/filter_view.dart';
 import '../../common/color_extension.dart';
 import '../../common/app_constants.dart';
+import '../../controllers/filter_controller.dart';
 
 class SearchView extends StatefulWidget {
   const SearchView({super.key});
@@ -18,11 +19,11 @@ class SearchView extends StatefulWidget {
 }
 
 class _SearchViewState extends State<SearchView> {
-  TextEditingController txtSearch = TextEditingController();
-  List productList = [];
-  List filteredProductList = [];
-  bool isLoading = true;
+  final TextEditingController txtSearch = TextEditingController();
   final CartController cartController = Get.put(CartController());
+  final FilterController filterController = Get.put(FilterController());
+
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -37,10 +38,8 @@ class _SearchViewState extends State<SearchView> {
 
       if (response.statusCode == 200) {
         var data = json.decode(response.body);
-        setState(() {
-          productList = data;
-          filteredProductList = data;
-        });
+        filterController.allProducts.value = data;
+        filterController.applyFilters(data); // Apply default filters (all)
       } else {
         Get.snackbar(
           'Error',
@@ -63,19 +62,9 @@ class _SearchViewState extends State<SearchView> {
     }
   }
 
-  void filterSearchResults(String query) {
-    if (query.isEmpty) {
-      setState(() {
-        filteredProductList = productList;
-      });
-    } else {
-      setState(() {
-        filteredProductList = productList.where((item) {
-          final name = item["productName"]?.toString().toLowerCase() ?? "";
-          return name.contains(query.toLowerCase());
-        }).toList();
-      });
-    }
+  void onSearchChanged(String query) {
+    filterController.updateSearchQuery(query);
+    filterController.applyFilters(filterController.allProducts);
   }
 
   @override
@@ -110,7 +99,7 @@ class _SearchViewState extends State<SearchView> {
           ),
           child: TextField(
             controller: txtSearch,
-            onChanged: filterSearchResults,
+            onChanged: onSearchChanged,
             decoration: InputDecoration(
               contentPadding: const EdgeInsets.symmetric(vertical: 15),
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
@@ -118,7 +107,7 @@ class _SearchViewState extends State<SearchView> {
                 icon: const Icon(Icons.close_rounded, size: 20),
                 onPressed: () {
                   txtSearch.text = "";
-                  filterSearchResults("");
+                  onSearchChanged("");
                   FocusScope.of(context).unfocus();
                 },
               ),
@@ -135,37 +124,34 @@ class _SearchViewState extends State<SearchView> {
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : GridView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.65,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-              ),
-              itemCount: filteredProductList.length,
-              itemBuilder: (context, index) {
-                var product =
-                    filteredProductList[index] as Map<String, dynamic>;
-                return Obx(
-                  () => ProductCell(
-                    pObj: product,
-                    onPressed: () {
-                      Get.to(() => ProductDetailsView(
-                            product: product,
-                          ));
-                    },
-                    onCart: () {
-                      cartController.addToCart(product["_id"]);
-                    },
-                    isLoading: cartController.loadingProductIds
-                        .contains(product["_id"]),
-                    margin: 0,
-                    weight: double.maxFinite,
-                  ),
-                );
-              },
-            ),
+          : Obx(() => GridView.builder(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.65,
+                  crossAxisSpacing: 15,
+                  mainAxisSpacing: 15,
+                ),
+                itemCount: filterController.filteredProducts.length,
+                itemBuilder: (context, index) {
+                  var product = filterController.filteredProducts[index]
+                      as Map<String, dynamic>;
+                  return Obx(() => ProductCell(
+                        pObj: product,
+                        onPressed: () {
+                          Get.to(() => ProductDetailsView(product: product));
+                        },
+                        onCart: () {
+                          cartController.addToCart(product["_id"]);
+                        },
+                        isLoading: cartController.loadingProductIds
+                            .contains(product["_id"]),
+                        margin: 0,
+                        weight: double.maxFinite,
+                      ));
+                },
+              )),
     );
   }
 }

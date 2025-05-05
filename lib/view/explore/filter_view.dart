@@ -1,163 +1,131 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common/color_extension.dart';
-import 'package:grocery_store_flutter/common_widget/filter_row.dart';
 import 'package:grocery_store_flutter/common_widget/round_button.dart';
+import 'package:grocery_store_flutter/controllers/category_controller.dart';
+import 'package:grocery_store_flutter/controllers/filter_controller.dart';
 
-class FilterView extends StatefulWidget {
-  const FilterView({super.key});
+class FilterView extends StatelessWidget {
+  final FilterController filterController = Get.find<FilterController>();
+  final CategoryController categoryController = Get.find<CategoryController>();
 
-  @override
-  State<FilterView> createState() => _FilterViewState();
-}
+  FilterView({super.key});
 
-class _FilterViewState extends State<FilterView> {
-  List selectArr = [];
-  List filterCatArr = [
-    {
-      "id": "1",
-      "name": "Eggs",
-    },
-    {
-      "id": "2",
-      "name": "Noodles & Pasta",
-    },
-    {
-      "id": "3",
-      "name": "Chips & Crisps",
-    },
-    {
-      "id": "4",
-      "name": "Fast Food",
-    }
-  ];
-  List filterBrandArr = [
-    {
-      "id": "1",
-      "name": "Individual Collection",
-    },
-    {
-      "id": "2",
-      "name": "Cocola",
-    },
-    {
-      "id": "3",
-      "name": "Ifad",
-    },
-    {
-      "id": "4",
-      "name": "Kazi Farmss",
-    }
-  ];
   @override
   Widget build(BuildContext context) {
+    categoryController.fetchCategories(); // Load categories once
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(
-            Icons.close_rounded,
-            size: 30,
-            color: Colors.black,
-          ),
+          icon: const Icon(Icons.close_rounded, color: Colors.black, size: 30),
+          onPressed: () => Navigator.pop(context),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: Text(
-          "Filters",
-          style: TextStyle(
-            color: TColor.primaryText,
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        title: Text("Filters",
+            style: TextStyle(
+              color: TColor.primaryText,
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            )),
       ),
-      body: Container(
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(20),
-            topRight: Radius.circular(20),
-          ),
-          color: Color(0xffF2F3F2),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
+      body: Obx(() {
+        return categoryController.isLoading.value
+            ? const Center(child: CircularProgressIndicator())
+            : Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  color: Color(0xffF2F3F2),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        "Categories",
-                        style: TextStyle(
-                          color: TColor.primaryText,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
+                    Expanded(
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text("Categories",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                )),
+                            const SizedBox(height: 10),
+                            ...categoryController.categories.map((cat) {
+                              return Obx(() => CheckboxListTile(
+                                    value: filterController.selectedCategories
+                                        .contains(cat.id),
+                                    onChanged: (_) =>
+                                        filterController.toggleCategory(cat.id),
+                                    title: Text(cat.name,
+                                        style: TextStyle(
+                                            color: TColor.primaryText)),
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                  ));
+                            }).toList(),
+                            const SizedBox(height: 20),
+                            const Text("Price Range",
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w600,
+                                )),
+                            const SizedBox(height: 10),
+                            Obx(() {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                      "₹${filterController.minPrice.value.toInt()} - ₹${filterController.maxPrice.value.toInt()}",
+                                      style: TextStyle(
+                                          color: TColor.primaryText,
+                                          fontSize: 16)),
+                                  RangeSlider(
+                                    values: RangeValues(
+                                      filterController.minPrice.value,
+                                      filterController.maxPrice.value,
+                                    ),
+                                    min: 0,
+                                    max: 1000,
+                                    divisions: 100,
+                                    onChanged: (RangeValues values) {
+                                      filterController.updatePriceRange(
+                                          values.start, values.end);
+                                    },
+                                  ),
+                                ],
+                              );
+                            }),
+                          ],
                         ),
                       ),
                     ),
-                    Column(
-                      children: filterCatArr.map(
-                        (fObj) {
-                          return FilterRow(
-                            fObj: fObj,
-                            isSelected: selectArr.contains(fObj),
-                            onPressed: () {
-                              if (selectArr.contains(fObj)) {
-                                selectArr.remove(fObj);
-                              } else {
-                                selectArr.add(fObj);
-                              }
-                              setState(() {});
-                            },
-                          );
-                        },
-                      ).toList(),
+                    RoundButton(
+                      title: "Apply",
+                      onPressed: () {
+                        filterController
+                            .applyFilters(filterController.allProducts);
+                        Navigator.pop(context);
+                      },
                     ),
-                    SizedBox(height: 15),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        "Brand",
-                        style: TextStyle(
-                          color: TColor.primaryText,
-                          fontSize: 24,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Column(
-                      children: filterBrandArr.map(
-                        (fObj) {
-                          return FilterRow(
-                            fObj: fObj,
-                            isSelected: selectArr.contains(fObj),
-                            onPressed: () {
-                              if (selectArr.contains(fObj)) {
-                                selectArr.remove(fObj);
-                              } else {
-                                selectArr.add(fObj);
-                              }
-                              setState(() {});
-                            },
-                          );
-                        },
-                      ).toList(),
-                    ),
+                    const SizedBox(height: 10),
+                    TextButton(
+                      onPressed: () {
+                        filterController.clearFilters();
+                      },
+                      child: const Text("Clear Filters"),
+                    )
                   ],
                 ),
-              ),
-            ),
-            RoundButton(title: "Apply", onPressed: () {}),
-          ],
-        ),
-      ),
+              );
+      }),
     );
   }
 }

@@ -298,15 +298,16 @@ class _AccountViewState extends State<AccountView> {
 
                   // Show IconButton only if not loading and authType is NOT Google
                   if (!_isLoading && authType != 'Google') {
-                    return IconButton(
+                    return AccountRow(
+                      title: "My Details",
+                      icon: "assets/img/a_my_detail.png",
                       onPressed: () {
-                        Get.to(() => MyDetailView());
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const MyDetailView()),
+                        );
                       },
-                      icon: Icon(
-                        Icons.edit,
-                        color: TColor.primary,
-                        size: 18,
-                      ),
                     );
                   } else {
                     return const SizedBox(); // Empty space if condition not met
