@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:grocery_store_flutter/common/app_constants.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:grocery_store_flutter/view/login/sign_in_view.dart';
 import 'package:grocery_store_flutter/view/account/about_view.dart';
 import 'package:grocery_store_flutter/view/account/contact_view.dart';
 import 'package:grocery_store_flutter/view/account/promo_code_view.dart';
-
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/account_row.dart';
 import 'address_list_view.dart';
@@ -21,9 +25,54 @@ class AccountView extends StatefulWidget {
 }
 
 class _AccountViewState extends State<AccountView> {
-  // Static user details
-  final String userName = "Code For Any";
-  final String userEmail = "codeforany@gmail.com";
+  String fullName = '';
+  String email = '';
+  String profilePicture = '';
+  bool _isLoading = true;
+  @override
+  void initState() {
+    super.initState();
+    fetchUserData();
+  }
+
+  Future<void> fetchUserData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString('userId');
+
+      if (userId == null) {
+        throw Exception("User ID not found");
+      }
+
+      final response =
+          await http.get(Uri.parse("${AppConstants.baseUrl}/users/$userId"));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          fullName = "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}";
+          email = data['email'] ?? '';
+          profilePicture = data['profilePicture'] ?? '';
+          _isLoading = false;
+        });
+      } else {
+        throw Exception("Failed to load user data");
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: $e")),
+      );
+    }
+  }
+
+  ImageProvider getProfileImage() {
+    if (profilePicture.isEmpty) {
+      return const AssetImage("assets/img/default_profile.png");
+    } else {
+      return NetworkImage(profilePicture);
+    }
+  }
 
   void logout() async {
     final prefs = await SharedPreferences.getInstance();
@@ -56,10 +105,9 @@ class _AccountViewState extends State<AccountView> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(35),
-                      child: Image.asset(
-                        "assets/img/u1.png",
-                        width: 60,
-                        height: 60,
+                      child: CircleAvatar(
+                        radius: 30,
+                        backgroundImage: getProfileImage(),
                       ),
                     ),
                     const SizedBox(width: 15),
@@ -70,7 +118,7 @@ class _AccountViewState extends State<AccountView> {
                           Row(
                             children: [
                               Text(
-                                userName,
+                                _isLoading ? "Loading..." : fullName,
                                 style: TextStyle(
                                   color: TColor.primaryText,
                                   fontSize: 20,
@@ -78,15 +126,21 @@ class _AccountViewState extends State<AccountView> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              Icon(
-                                Icons.edit,
-                                color: TColor.primary,
-                                size: 18,
-                              )
+                              if (!_isLoading)
+                                IconButton(
+                                  onPressed: () {
+                                    Get.to(() => MyDetailView());
+                                  },
+                                  icon: Icon(
+                                    Icons.edit,
+                                    color: TColor.primary,
+                                    size: 18,
+                                  ),
+                                )
                             ],
                           ),
                           Text(
-                            userEmail,
+                            _isLoading ? "Loading..." : email,
                             style: TextStyle(
                               color: TColor.secondaryText,
                               fontSize: 16,
