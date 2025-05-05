@@ -36,7 +36,7 @@ class CategoryController extends GetxController {
       message,
       backgroundColor: Get.theme.colorScheme.error.withOpacity(0.8),
       colorText: Get.theme.colorScheme.onError,
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
     );
   }
 }

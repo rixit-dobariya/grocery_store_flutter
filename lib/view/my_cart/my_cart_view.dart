@@ -43,7 +43,7 @@ class _MyCartViewState extends State<MyCartView> {
       Get.snackbar('Error', 'User not logged in.',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.TOP);
       return;
     }
 
@@ -73,7 +73,7 @@ class _MyCartViewState extends State<MyCartView> {
         Get.snackbar('Error', 'Failed to load cart data.',
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
       }
     } catch (e) {
       if (!mounted) return;
@@ -84,7 +84,7 @@ class _MyCartViewState extends State<MyCartView> {
       Get.snackbar('Error', 'Check your internet connection.',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.TOP);
     }
   }
 
@@ -115,20 +115,20 @@ class _MyCartViewState extends State<MyCartView> {
           Get.snackbar('Success', 'Quantity updated',
               backgroundColor: Colors.green,
               colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM);
+              snackPosition: SnackPosition.TOP);
         }
       } else {
         Get.snackbar('Error', 'Failed to update quantity',
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
       }
     } catch (e) {
       if (!mounted) return;
       Get.snackbar('Error', 'Error updating quantity',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.TOP);
     }
 
     if (!mounted) return;
@@ -162,21 +162,21 @@ class _MyCartViewState extends State<MyCartView> {
           Get.snackbar('Success', 'Item removed',
               backgroundColor: Colors.green,
               colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM);
+              snackPosition: SnackPosition.TOP);
         }
       } else {
         final data = jsonDecode(response.body);
         Get.snackbar('Error', data['message'] ?? 'Failed to remove item',
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
       }
     } catch (e) {
       if (!mounted) return;
       Get.snackbar('Error', 'Error removing item',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.TOP);
     }
 
     if (!mounted) return;

@@ -56,7 +56,7 @@ class _SignInViewState extends State<SignInView> {
             'Login successful!',
             backgroundColor: Colors.green,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
           );
           // Navigate to Main Tab view (or another screen as needed)
           Get.offAll(() => MainTabView());
@@ -67,7 +67,7 @@ class _SignInViewState extends State<SignInView> {
             responseMessage,
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
           );
         }
       } catch (e) {
@@ -76,7 +76,7 @@ class _SignInViewState extends State<SignInView> {
           'An error occurred: $e',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       } finally {
         setState(() => isLoading = false); // Hide loading indicator

@@ -65,7 +65,7 @@ class AddressController extends GetxController {
           'Address added successfully!',
           backgroundColor: Colors.green,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       } else {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
@@ -84,7 +84,7 @@ class AddressController extends GetxController {
       message,
       backgroundColor: Colors.red,
       colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
     );
   }
 }

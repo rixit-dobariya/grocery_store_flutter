@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common_widget/round_button.dart';
+import 'package:grocery_store_flutter/view/main_tab/main_tab_view.dart';
 
 import '../../common/color_extension.dart';
 
@@ -52,7 +54,7 @@ class OrderAcceptView extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  Get.to(() => MainTabView());
                 },
                 child: Text(
                   "Back to home",

@@ -62,19 +62,19 @@ class _OtpVerificationViewState extends State<OtpVerificationView> {
         Get.snackbar('Success', 'OTP resent to your email!',
             backgroundColor: Colors.green,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
         startTimer();
       } else {
         Get.snackbar('Error', responseData['message'] ?? 'Something went wrong',
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
       }
     } catch (e) {
       Get.snackbar('Error', 'Failed to resend OTP',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.TOP);
     }
   }
 
@@ -93,19 +93,19 @@ class _OtpVerificationViewState extends State<OtpVerificationView> {
           Get.snackbar('Success', 'OTP verified successfully!',
               backgroundColor: Colors.green,
               colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM);
+              snackPosition: SnackPosition.TOP);
           Get.to(() => ResetPasswordView(email: widget.email));
         } else {
           Get.snackbar('Error', responseData['message'] ?? 'Invalid OTP',
               backgroundColor: Colors.red,
               colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM);
+              snackPosition: SnackPosition.TOP);
         }
       } catch (e) {
         Get.snackbar('Error', 'Server error',
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
       }
       setState(() => isLoading = false);
     }

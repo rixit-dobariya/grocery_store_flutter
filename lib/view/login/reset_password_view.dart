@@ -40,19 +40,19 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
           Get.snackbar('Success', 'Password reset successfully!',
               backgroundColor: Colors.green,
               colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM);
+              snackPosition: SnackPosition.TOP);
           Get.offAll(() => SignInView());
         } else {
           Get.snackbar('Error', responseData['message'] ?? 'Reset failed',
               backgroundColor: Colors.red,
               colorText: Colors.white,
-              snackPosition: SnackPosition.BOTTOM);
+              snackPosition: SnackPosition.TOP);
         }
       } catch (e) {
         Get.snackbar('Error', 'Server error, try again later',
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
       }
       setState(() => isLoading = false);
     }

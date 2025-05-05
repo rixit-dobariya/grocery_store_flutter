@@ -70,7 +70,7 @@ class _MyDetailViewState extends State<MyDetailView> {
           "Failed to fetch user data",
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       }
     } else {
@@ -79,7 +79,7 @@ class _MyDetailViewState extends State<MyDetailView> {
         "User ID is not available",
         backgroundColor: Colors.red,
         colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
 
@@ -136,7 +136,7 @@ class _MyDetailViewState extends State<MyDetailView> {
           "User details updated successfully",
           backgroundColor: Colors.green,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
         Navigator.pop(context);
       } else {
@@ -145,7 +145,7 @@ class _MyDetailViewState extends State<MyDetailView> {
           "Failed to update user details",
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       }
     } catch (e) {
@@ -154,7 +154,7 @@ class _MyDetailViewState extends State<MyDetailView> {
         "Exception occurred: $e",
         backgroundColor: Colors.red,
         colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } finally {
       setState(() {

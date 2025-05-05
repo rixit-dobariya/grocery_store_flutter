@@ -5,8 +5,6 @@ import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common/color_extension.dart';
 import 'package:grocery_store_flutter/common_widget/checkout_row.dart';
 import 'package:grocery_store_flutter/common_widget/round_button.dart';
-import 'package:grocery_store_flutter/view/my_cart/error_view.dart';
-import 'package:grocery_store_flutter/view/my_cart/order_accept_view.dart';
 import 'package:grocery_store_flutter/view/my_cart/select_address_view.dart';
 import 'package:grocery_store_flutter/view/my_cart/select_promo_code_view.dart';
 import '../../controllers/checkout_controller.dart';
@@ -101,7 +99,7 @@ class _CheckoutViewState extends State<CheckoutView> {
 
 // Discount
             Obx(() {
-              if (checkoutController.discountAmount.value > 0)
+              if (checkoutController.discountAmount.value > 0) {
                 return CheckoutRow(
                   title: "Promo Discount",
                   value:
@@ -109,8 +107,9 @@ class _CheckoutViewState extends State<CheckoutView> {
                   onPressed: () {},
                   isButton: false,
                 );
-              else
+              } else {
                 return const SizedBox.shrink();
+              }
             }),
 
             // Shipping

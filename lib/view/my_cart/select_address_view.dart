@@ -77,7 +77,7 @@ class _SelectAddressViewState extends State<SelectAddressView> {
           itemCount: addressController.addresses.length,
           itemBuilder: (context, index) {
             final address = addressController.addresses[index];
-            final selectedId = checkoutController.selectedAddress['id'] ?? '';
+            final selectedId = checkoutController.selectedAddress['_id'] ?? '';
             final isSelected = selectedId == address.id;
 
             return Container(

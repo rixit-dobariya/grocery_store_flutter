@@ -74,7 +74,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
           'Password updated successfully',
           backgroundColor: Colors.green,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
         Navigator.pop(context);
       } else {
@@ -84,7 +84,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
           data['message'] ?? 'Failed to update password',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       }
     } catch (e) {
@@ -94,7 +94,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
         'Something went wrong: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     }
   }

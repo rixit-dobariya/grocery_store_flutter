@@ -40,7 +40,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
             responseMessage,
             backgroundColor: Colors.green,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
           );
           Get.to(() => OtpVerificationView(email: txtEmail.text));
         } else {
@@ -49,7 +49,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
             responseMessage,
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
           );
         }
       } catch (e) {
@@ -58,7 +58,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
           'An error occurred: $e',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       } finally {
         setState(() => isLoading = false);

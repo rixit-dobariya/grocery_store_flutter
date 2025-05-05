@@ -35,7 +35,7 @@ class _AccountViewState extends State<AccountView> {
       'You have been logged out successfully!',
       backgroundColor: Colors.green,
       colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
       duration: Duration(seconds: 2),
     );
     Get.offAll(() => const SignInView());

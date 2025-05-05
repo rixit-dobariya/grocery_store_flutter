@@ -54,7 +54,7 @@ class _SignUpViewState extends State<SignUpView> {
             responseMessage,
             backgroundColor: Colors.green,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
           );
           Get.to(() => SignInView());
         } else {
@@ -63,7 +63,7 @@ class _SignUpViewState extends State<SignUpView> {
             responseMessage,
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM,
+            snackPosition: SnackPosition.TOP,
           );
         }
       } catch (e) {
@@ -72,7 +72,7 @@ class _SignUpViewState extends State<SignUpView> {
           'An error occurred: $e',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       } finally {
         setState(() => isLoading = false); // hide loading

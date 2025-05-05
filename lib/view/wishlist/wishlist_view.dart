@@ -41,7 +41,7 @@ class _WishlistViewState extends State<WishlistView> {
       Get.snackbar('Error', 'User ID not found in SharedPreferences',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.TOP);
     }
   }
 
@@ -66,7 +66,7 @@ class _WishlistViewState extends State<WishlistView> {
         Get.snackbar('Error', data['message'] ?? 'Failed to load wishlist',
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
         setState(() => isLoading = false);
       }
     } catch (e) {
@@ -74,7 +74,7 @@ class _WishlistViewState extends State<WishlistView> {
       Get.snackbar('Error', 'Server error',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.TOP);
       setState(() => isLoading = false);
     }
   }
@@ -96,21 +96,21 @@ class _WishlistViewState extends State<WishlistView> {
         Get.snackbar('Success', 'Item removed from wishlist',
             backgroundColor: Colors.green,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
         fetchWishlist();
       } else {
         final data = jsonDecode(response.body);
         Get.snackbar('Error', data['message'] ?? 'Failed to remove item',
             backgroundColor: Colors.red,
             colorText: Colors.white,
-            snackPosition: SnackPosition.BOTTOM);
+            snackPosition: SnackPosition.TOP);
       }
     } catch (e) {
       if (!mounted) return;
       Get.snackbar('Error', 'Server error',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.TOP);
     } finally {
       if (!mounted) return;
       setState(() => deletingProductIds.remove(productId));

@@ -47,7 +47,7 @@ class _SearchViewState extends State<SearchView> {
           'Failed to load products: ${response.statusCode}',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       }
     } catch (e) {
@@ -56,7 +56,7 @@ class _SearchViewState extends State<SearchView> {
         'An error occurred: $e',
         backgroundColor: Colors.red,
         colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
       );
     } finally {
       setState(() => isLoading = false);

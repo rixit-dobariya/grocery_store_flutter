@@ -1,6 +1,6 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common/app_constants.dart';
-import 'package:grocery_store_flutter/common/color_extension.dart';
 import 'package:grocery_store_flutter/view/my_cart/order_accept_view.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -12,7 +12,7 @@ class CheckoutController extends GetxController {
   var promoCode = {}.obs;
   var cartItems = [].obs;
   var totalPrice = 0.0.obs;
-  var shippingCharge = 50.0.obs;
+  var shippingCharge = 0.0.obs;
   var discountAmount = 0.0.obs;
   var subtotal = 0.0.obs;
 
@@ -41,6 +41,7 @@ class CheckoutController extends GetxController {
 
       subtotal.value = rawSubtotal;
       discountAmount.value = promoDiscount;
+      shippingCharge.value = cartItems.isNotEmpty ? 50.0 : 0.0;
       totalPrice.value = rawSubtotal - promoDiscount + shippingCharge.value;
     } catch (e) {
       print("Error calculating total: $e");
@@ -108,8 +109,6 @@ class CheckoutController extends GetxController {
         'enabled': true,
         'max_count': 1,
       },
-      // You can enable wallets if needed, but Razorpay shows them automatically if available
-      // 'method': 'upi', // Optional: auto-select default method (user can still switch)
     };
 
     try {
@@ -147,7 +146,7 @@ class CheckoutController extends GetxController {
         url,
         body: json.encode({
           'userId': userId,
-          'addressId': selectedAddress['id'],
+          'addressId': selectedAddress['_id'] ?? selectedAddress['id'],
           'promoCodeId': promoCode['id'],
           'razorpayOrderId': razorpayOrderId,
           'razorpayPaymentId': razorpayPaymentId,
@@ -157,15 +156,32 @@ class CheckoutController extends GetxController {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final responseData = json.decode(response.body);
-        if (responseData['success']) {
+        if (responseData['success'] == true ||
+            responseData['message'] == 'Checkout completed successfully.') {
           resetCheckout();
-          Get.snackbar('Success', 'Order placed successfully');
-          Get.to(() => OrderAcceptView());
+          Get.snackbar(
+            'Success',
+            responseData['message'] ?? 'Order placed successfully',
+            backgroundColor: Colors.green,
+            colorText: Colors.white,
+          );
+          Get.offAll(() => OrderAcceptView());
         } else {
-          Get.snackbar('Error', 'Failed to complete the order');
+          Get.snackbar(
+            'Error',
+            responseData['message'] ?? 'Failed to complete the order',
+            backgroundColor: Colors.red,
+            colorText: Colors.white,
+          );
         }
       } else {
-        Get.snackbar('Error', 'Failed to confirm payment');
+        final responseData = json.decode(response.body);
+        Get.snackbar(
+          'Error',
+          responseData['message'] ?? 'Failed to confirm payment',
+          backgroundColor: Colors.red,
+          colorText: Colors.white,
+        );
       }
     } catch (error) {
       Get.snackbar('Error', 'An error occurred while confirming payment');

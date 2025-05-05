@@ -88,7 +88,7 @@ class _ContactViewState extends State<ContactView> {
           'Message sent successfully!',
           backgroundColor: Colors.green,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           duration: const Duration(seconds: 3),
         );
         Navigator.pop(context); // Or clear the form
@@ -99,7 +99,7 @@ class _ContactViewState extends State<ContactView> {
           data['message'] ?? 'Something went wrong.',
           backgroundColor: Colors.red,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
           duration: const Duration(seconds: 3),
         );
       }
@@ -110,7 +110,7 @@ class _ContactViewState extends State<ContactView> {
         'Something went wrong: ${e.toString()}',
         backgroundColor: Colors.red,
         colorText: Colors.white,
-        snackPosition: SnackPosition.BOTTOM,
+        snackPosition: SnackPosition.TOP,
         duration: const Duration(seconds: 3),
       );
     }

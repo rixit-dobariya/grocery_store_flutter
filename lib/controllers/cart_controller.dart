@@ -38,7 +38,7 @@ class CartController extends GetxController {
           'Product added to cart!',
           backgroundColor: Colors.green,
           colorText: Colors.white,
-          snackPosition: SnackPosition.BOTTOM,
+          snackPosition: SnackPosition.TOP,
         );
       } else {
         _showError('Failed to add product');
@@ -56,7 +56,7 @@ class CartController extends GetxController {
       message,
       backgroundColor: Colors.red,
       colorText: Colors.white,
-      snackPosition: SnackPosition.BOTTOM,
+      snackPosition: SnackPosition.TOP,
     );
   }
 }
