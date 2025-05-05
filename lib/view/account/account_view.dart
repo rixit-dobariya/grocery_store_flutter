@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common/app_constants.dart';
+import 'package:grocery_store_flutter/controllers/google_sign_in_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:grocery_store_flutter/view/login/sign_in_view.dart';
 import 'package:grocery_store_flutter/view/account/about_view.dart';
@@ -41,7 +43,8 @@ class _AccountViewState extends State<AccountView> {
       final userId = prefs.getString('userId');
 
       if (userId == null) {
-        throw Exception("User ID not found");
+        Get.snackbar("Error", "User ID not found");
+        return;
       }
 
       final response =
@@ -49,24 +52,42 @@ class _AccountViewState extends State<AccountView> {
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-        setState(() {
-          fullName = "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}";
-          email = data['email'] ?? '';
-          profilePicture = data['profilePicture'] ?? '';
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            fullName = "${data['firstName'] ?? ''} ${data['lastName'] ?? ''}";
+            email = data['email'] ?? '';
+            profilePicture = data['profilePicture'] ?? '';
+            _isLoading = false;
+          });
+        }
       } else {
-        throw Exception("Failed to load user data");
+        if (mounted) {
+          setState(() => _isLoading = false);
+        }
+        Get.snackbar("Error", "Failed to load user data");
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+      Get.snackbar("Error", "Error: $e");
     }
   }
 
-  ImageProvider getProfileImage() {
+  Future<ImageProvider> getProfileImage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? authType = prefs.getString(
+        'authType'); // Assuming 'authType' is stored in shared preferences
+
+    // If authType is Google, fetch the photo from Firebase
+    if (authType == 'Google') {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      // Check if the user is logged in and has a photo URL
+      if (user != null && user.photoURL != null) {
+        return NetworkImage(user.photoURL!);
+      }
+    }
     if (profilePicture.isEmpty) {
       return const AssetImage("assets/img/default_profile.png");
     } else {
@@ -76,18 +97,52 @@ class _AccountViewState extends State<AccountView> {
 
   void logout() async {
     final prefs = await SharedPreferences.getInstance();
+    final authType = prefs.getString('authType');
+
+    if (authType == 'Google') {
+      // Use Get.find if you're using Get.put() for controller, otherwise
+      final googleSignInController = Get.put(GoogleSignInController());
+      await googleSignInController.signOut();
+    }
 
     await prefs.remove('token');
     await prefs.remove('userId');
+    await prefs.remove('authType');
+
     Get.snackbar(
       'Logged Out',
       'You have been logged out successfully!',
       backgroundColor: Colors.green,
       colorText: Colors.white,
       snackPosition: SnackPosition.TOP,
-      duration: Duration(seconds: 2),
+      duration: const Duration(seconds: 2),
     );
+
     Get.offAll(() => const SignInView());
+  }
+
+  Future<String> getFullName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? authType =
+        prefs.getString('authType'); // Assuming 'authType' is stored
+
+    // If authType is Google, fetch the full name from Firebase
+    if (authType == 'Google') {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      // If the user is logged in, fetch the full name
+      if (user != null && user.displayName != null) {
+        return user.displayName!;
+      }
+    }
+
+    // If no Google auth or no full name, return an empty string or fallback value
+    return fullName; // You can replace this with the value from shared preferences or your data
+  }
+
+  Future<String?> getAuthType() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('authType');
   }
 
   @override
@@ -105,9 +160,27 @@ class _AccountViewState extends State<AccountView> {
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(35),
-                      child: CircleAvatar(
-                        radius: 30,
-                        backgroundImage: getProfileImage(),
+                      child: FutureBuilder<ImageProvider>(
+                        future: getProfileImage(), // Fetch image asynchronously
+                        builder: (BuildContext context,
+                            AsyncSnapshot<ImageProvider> snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator(); // Show loading while waiting
+                          } else if (snapshot.hasError) {
+                            return const Icon(
+                                Icons.error); // Show error if there's any issue
+                          } else if (snapshot.hasData) {
+                            return CircleAvatar(
+                              radius: 30,
+                              backgroundImage:
+                                  snapshot.data, // Use the fetched image
+                            );
+                          } else {
+                            return const Icon(
+                                Icons.account_circle); // Default icon
+                          }
+                        },
                       ),
                     ),
                     const SizedBox(width: 15),
@@ -117,26 +190,80 @@ class _AccountViewState extends State<AccountView> {
                         children: [
                           Row(
                             children: [
-                              Text(
-                                _isLoading ? "Loading..." : fullName,
-                                style: TextStyle(
-                                  color: TColor.primaryText,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                              FutureBuilder<String>(
+                                future:
+                                    getFullName(), // Call the async function to get full name
+                                builder: (BuildContext context,
+                                    AsyncSnapshot<String> snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Text(
+                                      "Loading...",
+                                      style: TextStyle(
+                                        color: TColor.primaryText,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ); // Show loading while waiting
+                                  } else if (snapshot.hasError) {
+                                    return Text(
+                                      "Error loading name",
+                                      style: TextStyle(
+                                        color: TColor.primaryText,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ); // Show error message if any
+                                  } else if (snapshot.hasData) {
+                                    return Text(
+                                      snapshot
+                                          .data!, // Display the fetched full name
+                                      style: TextStyle(
+                                        color: TColor.primaryText,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    );
+                                  } else {
+                                    return Text(
+                                      "No Name Available", // Default if no data is available
+                                      style: TextStyle(
+                                        color: TColor.primaryText,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                               const SizedBox(width: 8),
-                              if (!_isLoading)
-                                IconButton(
-                                  onPressed: () {
-                                    Get.to(() => MyDetailView());
-                                  },
-                                  icon: Icon(
-                                    Icons.edit,
-                                    color: TColor.primary,
-                                    size: 18,
-                                  ),
-                                )
+                              FutureBuilder<String?>(
+                                future:
+                                    getAuthType(), // async function to get authType
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const SizedBox(); // Or a loading indicator if you prefer
+                                  }
+
+                                  final authType = snapshot.data;
+
+                                  if (!_isLoading && authType != 'Google') {
+                                    return IconButton(
+                                      onPressed: () {
+                                        Get.to(() => MyDetailView());
+                                      },
+                                      icon: Icon(
+                                        Icons.edit,
+                                        color: TColor.primary,
+                                        size: 18,
+                                      ),
+                                    );
+                                  } else {
+                                    return const SizedBox(); // Return empty widget otherwise
+                                  }
+                                },
+                              ),
                             ],
                           ),
                           Text(
@@ -160,11 +287,30 @@ class _AccountViewState extends State<AccountView> {
                   Get.to(() => const MyOrdersView());
                 },
               ),
-              AccountRow(
-                title: "My Details",
-                icon: "assets/img/a_my_detail.png",
-                onPressed: () {
-                  Get.to(() => const MyDetailView());
+              FutureBuilder<String?>(
+                future: getAuthType(), // Fetch authType asynchronously
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox(); // Placeholder while loading
+                  }
+
+                  final authType = snapshot.data;
+
+                  // Show IconButton only if not loading and authType is NOT Google
+                  if (!_isLoading && authType != 'Google') {
+                    return IconButton(
+                      onPressed: () {
+                        Get.to(() => MyDetailView());
+                      },
+                      icon: Icon(
+                        Icons.edit,
+                        color: TColor.primary,
+                        size: 18,
+                      ),
+                    );
+                  } else {
+                    return const SizedBox(); // Empty space if condition not met
+                  }
                 },
               ),
               AccountRow(

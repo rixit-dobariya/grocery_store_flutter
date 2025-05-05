@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:grocery_store_flutter/common/app_constants.dart';
 import 'package:grocery_store_flutter/common/color_extension.dart';
 import 'package:grocery_store_flutter/common_widget/round_button.dart';
+import 'package:grocery_store_flutter/controllers/google_sign_in_controller.dart';
 import 'package:grocery_store_flutter/view/login/forgot_password_view.dart';
 import 'package:grocery_store_flutter/view/login/sign_up_view.dart';
 import 'package:grocery_store_flutter/view/main_tab/main_tab_view.dart';
@@ -23,6 +24,8 @@ class _SignInViewState extends State<SignInView> {
   bool isVisible = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool isLoading = false;
+  final GoogleSignInController _googleSignInController =
+      GoogleSignInController();
 
   // Function to handle login logic
   Future<void> signIn() async {
@@ -195,12 +198,17 @@ class _SignInViewState extends State<SignInView> {
                   SizedBox(height: media.height * 0.01),
 
                   // Log In Button
-                  isLoading
-                      ? CircularProgressIndicator()
-                      : RoundButton(
-                          title: "Log In",
-                          onPressed: signIn, // Call the signIn method
-                        ),
+                  Obx(
+                    () {
+                      return isLoading ||
+                              _googleSignInController.isLoading.value
+                          ? CircularProgressIndicator()
+                          : RoundButton(
+                              title: "Log In",
+                              onPressed: signIn,
+                            );
+                    },
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -230,11 +238,21 @@ class _SignInViewState extends State<SignInView> {
                   SizedBox(height: media.height * 0.05),
 
                   // Continue with Google Button
-                  RoundIconButton(
-                    title: "Continue With Google",
-                    icon: "assets/img/google_logo.png",
-                    bgColor: Color(0xff5383EC),
-                    onPressed: () {},
+                  Obx(
+                    () {
+                      return isLoading ||
+                              _googleSignInController.isLoading.value
+                          ? CircularProgressIndicator() // Show loading indicator
+                          : RoundIconButton(
+                              title: "Continue With Google",
+                              icon: "assets/img/google_logo.png",
+                              bgColor: Color(0xff5383EC),
+                              onPressed: () async {
+                                await _googleSignInController
+                                    .signInWithGoogle();
+                              },
+                            );
+                    },
                   ),
                 ],
               ),

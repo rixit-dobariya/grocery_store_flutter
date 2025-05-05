@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "29488560698",
+    "project_id": "grocery-store-d6596",
+    "storage_bucket": "grocery-store-d6596.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:29488560698:android:47530b0acaa5b80027d303",
+        "android_client_info": {
+          "package_name": "com.example.grocery_store_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "29488560698-720klh3p1db646s3tgqquvv8k554fhsa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChHT6rhtGYJIiN5IVQV_ZJT5TE_zNEOHg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "29488560698-720klh3p1db646s3tgqquvv8k554fhsa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

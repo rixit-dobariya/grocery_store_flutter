@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:grocery_store_flutter/common/color_extension.dart';
 import 'package:grocery_store_flutter/view/splash_view.dart';
 import 'package:get/get.dart';
+import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform, // from CLI
+  );
   runApp(const MyApp());
 }
 
