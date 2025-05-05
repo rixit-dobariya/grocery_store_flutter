@@ -1,91 +1,88 @@
 import 'package:flutter/material.dart';
-
 import '../common/color_extension.dart';
 
 class MyOrderRow extends StatelessWidget {
-  final Map<String, dynamic> orderData; // Now directly using a Map
+  final Map<String, dynamic> orderData;
   final VoidCallback onTap;
 
   const MyOrderRow({super.key, required this.orderData, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final address = orderData['delAddressId'];
+
     return InkWell(
       onTap: onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
-        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(5),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Order ID & Date
             Row(
               children: [
-                Text(
-                  "Order No: #",
-                  style: TextStyle(
-                      color: TColor.primaryText,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700),
-                ),
                 Expanded(
                   child: Text(
-                    orderData['orderId']?.toString() ?? "",
+                    "Order No: #${orderData['_id'] ?? ''}",
                     style: TextStyle(
-                        color: TColor.primaryText,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: TColor.primaryText,
+                    ),
                   ),
                 ),
-                Text(
-                  getOrderStatus(orderData),
-                  style: TextStyle(
-                      color: getOrderStatusColor(orderData),
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700),
-                )
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: getOrderStatusColor(orderData['orderStatus']),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    orderData['orderStatus'] ?? "",
+                    style: const TextStyle(color: Colors.white, fontSize: 12),
+                  ),
+                ),
               ],
             ),
+
+            const SizedBox(height: 4),
             Text(
-              orderData['createdDate'] ?? "",
+              formatDate(orderData['createdAt']),
               style: TextStyle(color: TColor.secondaryText, fontSize: 12),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
+
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if ((orderData['images']?.length ?? 0) > 0)
-                  Image.network(
-                    "",
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) =>
-                        const Icon(Icons.error),
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return const Center(child: CircularProgressIndicator());
-                    },
-                  ),
-                const SizedBox(width: 15),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      buildOrderRow("Items: ", orderData['names'] ?? ""),
+                      buildOrderRow("Total:",
+                          "₹${orderData['total']?['\$numberDecimal'] ?? '0'}"),
+                      buildOrderRow("Shipping:",
+                          "₹${orderData['shippingCharge']?['\$numberDecimal'] ?? '0'}"),
                       buildOrderRow(
-                          "Delivery Type: ", getDeliverType(orderData)),
+                          "Payment Mode:", orderData['paymentMode'] ?? ""),
                       buildOrderRow(
-                          "Payment Type: ", getPaymentType(orderData)),
-                      buildOrderRow(
-                        "Payment Status: ",
-                        getPaymentStatus(orderData),
-                        statusColor: getPaymentStatusColor(orderData),
+                        "Payment Status:",
+                        orderData['paymentStatus'] ?? "",
+                        statusColor:
+                            getPaymentStatusColor(orderData['paymentStatus']),
                       ),
+                      if (address != null)
+                        buildOrderRow(
+                          "Delivery Address:",
+                          "${address['fullName']}, ${address['address']}, ${address['city']}, ${address['state']}, ${address['pincode']}, Ph: ${address['phone']}",
+                        ),
                     ],
                   ),
                 ),
@@ -98,117 +95,65 @@ class MyOrderRow extends StatelessWidget {
   }
 
   Widget buildOrderRow(String label, String value, {Color? statusColor}) {
-    return Row(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "$label ",
+            style: TextStyle(
               color: TColor.primaryText,
               fontSize: 14,
-              fontWeight: FontWeight.w700),
-        ),
-        Expanded(
-          child: Text(
-            value,
-            style: TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(
                 color: statusColor ?? TColor.secondaryText,
                 fontSize: 14,
-                fontWeight: FontWeight.w500),
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
-  String getOrderStatus(Map<String, dynamic> orderData) {
-    switch (orderData['orderStatus']) {
-      case 1:
-        return "Placed";
-      case 2:
-        return "Accepted";
-      case 3:
-        return "Delivered";
-      case 4:
-        return "Cancel";
-      case 5:
-        return "Declined";
-      default:
-        return "";
-    }
-  }
-
-  String getDeliverType(Map<String, dynamic> orderData) {
-    switch (orderData['deliverType']) {
-      case 1:
-        return "Delivery";
-      case 2:
-        return "Collection";
-      default:
-        return "";
-    }
-  }
-
-  String getPaymentType(Map<String, dynamic> orderData) {
-    switch (orderData['paymentType']) {
-      case 1:
-        return "Cash On Delivery";
-      case 2:
-        return "Online Card Payment";
-      default:
-        return "";
-    }
-  }
-
-  String getPaymentStatus(Map<String, dynamic> orderData) {
-    if (orderData['paymentType'] == 1) {
-      return "COD";
-    }
-    switch (orderData['paymentStatus']) {
-      case 1:
-        return "Processing";
-      case 2:
-        return "Success";
-      case 3:
-        return "Fail";
-      case 4:
-        return "Refunded";
-      default:
-        return "";
-    }
-  }
-
-  Color getPaymentStatusColor(Map<String, dynamic> orderData) {
-    if (orderData['paymentType'] == 1) {
-      return Colors.orange;
-    }
-    switch (orderData['paymentStatus']) {
-      case 1:
+  Color getOrderStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case "pending":
+        return Colors.orange;
+      case "shipped":
         return Colors.blue;
-      case 2:
+      case "delivered":
         return Colors.green;
-      case 3:
+      case "cancelled":
         return Colors.red;
-      case 4:
-        return Colors.green;
       default:
-        return Colors.white;
+        return Colors.grey;
     }
   }
 
-  Color getOrderStatusColor(Map<String, dynamic> orderData) {
-    switch (orderData['orderStatus']) {
-      case 1:
-        return Colors.blue;
-      case 2:
+  Color getPaymentStatusColor(String? status) {
+    switch (status?.toLowerCase()) {
+      case "completed":
         return Colors.green;
-      case 3:
-        return Colors.green;
-      case 4:
-        return Colors.red;
-      case 5:
+      case "pending":
+        return Colors.orange;
+      case "failed":
         return Colors.red;
       default:
-        return TColor.primary;
+        return Colors.grey;
     }
+  }
+
+  String formatDate(String? isoDate) {
+    if (isoDate == null) return "";
+    final dateTime = DateTime.tryParse(isoDate);
+    if (dateTime == null) return "";
+    return "${dateTime.day.toString().padLeft(2, '0')}-${dateTime.month.toString().padLeft(2, '0')}-${dateTime.year}";
   }
 }

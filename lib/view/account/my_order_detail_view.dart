@@ -1,32 +1,63 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import '../../common/app_constants.dart';
+import '../../common/color_extension.dart';
 import '../../common_widget/order_item_row.dart';
 import '../../common_widget/popup_layout.dart';
-import '../../common/color_extension.dart';
 import 'write_review_view.dart';
 
 class MyOrdersDetailView extends StatefulWidget {
-  final Map<String, dynamic> mObj;
+  final String orderId;
 
-  const MyOrdersDetailView({super.key, required this.mObj});
+  const MyOrdersDetailView({Key? key, required this.orderId}) : super(key: key);
 
   @override
-  State<MyOrdersDetailView> createState() => _MyOrdersDetailViewState();
+  _MyOrdersDetailViewState createState() => _MyOrdersDetailViewState();
 }
 
 class _MyOrdersDetailViewState extends State<MyOrdersDetailView> {
-  List<Map<String, dynamic>> cartList = [];
+  late Map<String, dynamic> order;
+  late List<Map<String, dynamic>> orderItems;
+  bool isLoading = true;
+  String errorMessage = '';
 
   @override
   void initState() {
     super.initState();
-    // You can replace this with API call logic
-    cartList = widget.mObj["cartItems"] ?? [];
+    orderItems = [];
+    fetchOrderDetails();
+  }
+
+  Future<void> fetchOrderDetails() async {
+    final String url = '${AppConstants.baseUrl}/orders/${widget.orderId}';
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        setState(() {
+          order = responseData['order'];
+          orderItems =
+              List<Map<String, dynamic>>.from(responseData['orderItems']);
+          isLoading = false;
+        });
+      } else {
+        setState(() {
+          isLoading = false;
+          errorMessage = 'Failed to load order details.';
+        });
+      }
+    } catch (error) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'An error occurred: $error';
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final order = widget.mObj;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -46,133 +77,224 @@ class _MyOrdersDetailViewState extends State<MyOrdersDetailView> {
         ),
       ),
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 15),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20),
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 2)
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : errorMessage.isNotEmpty
+              ? _showError(errorMessage)
+              : SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          "Order ID: #${order["orderId"] ?? ''}",
-                          style: TextStyle(
-                            color: TColor.primaryText,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        getPaymentStatus(order),
-                        style: TextStyle(
-                          color: getPaymentStatusColor(order),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      const SizedBox(height: 15),
+                      _buildOrderInfoCard(),
+                      const SizedBox(height: 15),
+                      _buildAddressCard(),
+                      const SizedBox(height: 15),
+                      _buildOrderItemsList(),
+                      const SizedBox(height: 15),
+                      _buildAmountSummaryCard(),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          "${order["createdDate"] ?? ''}",
-                          style: TextStyle(
-                            color: TColor.secondaryText,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        getOrderStatus(order),
-                        style: TextStyle(
-                          color: getOrderStatusColor(order),
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
+                ),
+    );
+  }
+
+  Widget _buildOrderInfoCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(5),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  "Order ID: #${order["_id"] ?? ''}",
+                  style: TextStyle(
+                    color: TColor.primaryText,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "${order["address"] ?? ""}, ${order["city"] ?? ""}, ${order["state"] ?? ""}, ${order["postalCode"] ?? ""}",
-                    style: TextStyle(
-                      color: TColor.secondaryText,
-                      fontSize: 16,
-                    ),
+                ),
+              ),
+              Text(
+                getPaymentStatus(order),
+                style: TextStyle(
+                  color: getPaymentStatusColor(order),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  "${order["orderDate"] ?? ''}",
+                  style: TextStyle(
+                    color: TColor.secondaryText,
+                    fontSize: 12,
                   ),
-                  const SizedBox(height: 8),
-                  _buildInfoRow("Delivery Type:", getDeliverType(order)),
-                  _buildInfoRow("Payment Type:", getPaymentType(order)),
-                ],
+                ),
               ),
-            ),
-            ListView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              itemCount: cartList.length,
-              itemBuilder: (context, index) {
-                var pObj = cartList[index];
-                return OrderItemRow(
-                  imageUrl: pObj["imageUrl"],
-                  name: pObj["name"],
-                  unitValue: pObj["unitValue"],
-                  unitName: pObj["unitName"],
-                  qty: pObj["qty"],
-                  itemPrice: pObj["itemPrice"],
-                  totalPrice: pObj["totalPrice"],
-                  showReviewButton:
-                      (order["orderStatus"] == 3 && pObj["rating"] == 0.0),
-                  onWriteReviewPressed: () {},
-                );
-              },
-            ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(5),
-                boxShadow: const [
-                  BoxShadow(color: Colors.black12, blurRadius: 2)
-                ],
+              Text(
+                getOrderStatus(order),
+                style: TextStyle(
+                  color: getOrderStatusColor(order),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildAmountRow("Amount:",
-                      "\$${(order["totalPrice"] ?? 0).toStringAsFixed(2)}"),
-                  _buildAmountRow("Delivery Cost:",
-                      "+ \$${(order["deliverPrice"] ?? 0).toStringAsFixed(2)}"),
-                  _buildAmountRow("Discount:",
-                      "- \$${(order["discountPrice"] ?? 0).toStringAsFixed(2)}",
-                      isDiscount: true),
-                  const Divider(color: Colors.black12, thickness: 1),
-                  _buildAmountRow("Total:",
-                      "\$${(order["userPayPrice"] ?? 0).toStringAsFixed(2)}",
-                      isTotal: true),
-                ],
-              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          _buildInfoRow("Payment Type:", getPaymentType(order)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAddressCard() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(5),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Delivery Address",
+            style: TextStyle(
+              color: TColor.primaryText,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: 15),
-          ],
-        ),
+          ),
+          const SizedBox(height: 8),
+          // Display Full Name
+          Text(
+            "${order["delAddressId"]?["fullName"] ?? "N/A"}",
+            style: TextStyle(
+              color: TColor.primaryText,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          // Display Address in a more readable format
+          Text(
+            "${order["delAddressId"]?["address"] ?? "N/A"}",
+            style: TextStyle(
+              color: TColor.secondaryText,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            "${order["delAddressId"]?["city"] ?? "N/A"}, ${order["delAddressId"]?["state"] ?? "N/A"} - ${order["delAddressId"]?["pincode"] ?? "N/A"}",
+            style: TextStyle(
+              color: TColor.secondaryText,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Display Phone Number
+          _buildInfoRow(
+              "Phone:", "${order["delAddressId"]?["phone"] ?? "N/A"}"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOrderItemsList() {
+    return ListView.builder(
+      physics: const NeverScrollableScrollPhysics(),
+      shrinkWrap: true,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      itemCount: orderItems.length,
+      itemBuilder: (context, index) {
+        var pObj = orderItems[index];
+
+        // Parse price safely
+        String priceStr = pObj['price']['\$numberDecimal'] ?? '0.0';
+        double price = double.tryParse(priceStr) ?? 0.0;
+
+        // Parse quantity safely
+        int quantity = pObj["quantity"] is int
+            ? pObj["quantity"]
+            : int.tryParse(pObj["quantity"].toString()) ?? 0;
+
+        double totalPrice = price * quantity;
+
+        return OrderItemRow(
+          imageUrl: pObj["productId"]?["productImage"] ?? '',
+          name: pObj["productId"]?["productName"] ?? '',
+          qty: quantity,
+          totalPrice: totalPrice,
+          showReviewButton:
+              (order["orderStatus"] == "Delivered" && pObj["rating"] == 0.0),
+          onWriteReviewPressed: () {
+            // Implement the review writing functionality here
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildAmountSummaryCard() {
+    double itemsTotal = 0;
+    double totalDiscount = 0;
+
+    for (var item in orderItems) {
+      final price =
+          double.tryParse(item['price']['\$numberDecimal'].toString()) ?? 0.0;
+      final qty = double.tryParse(item['quantity'].toString()) ?? 0.0;
+      final discount =
+          double.tryParse(item['discount']['\$numberDecimal'].toString()) ??
+              0.0;
+
+      itemsTotal += price * qty;
+      totalDiscount += discount;
+    }
+
+    final shipping = double.tryParse(
+            order['shippingCharge']['\$numberDecimal'].toString()) ??
+        0.0;
+    final finalTotal = itemsTotal - totalDiscount + shipping;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(5),
+        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 2)],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildAmountRow("Amount:", "\₹${itemsTotal.toStringAsFixed(2)}"),
+          _buildAmountRow(
+              "Delivery Cost:", "+ \₹${shipping.toStringAsFixed(2)}"),
+          _buildAmountRow(
+              "Discount:", "- \₹${totalDiscount.toStringAsFixed(2)}",
+              isDiscount: true),
+          const Divider(color: Colors.black12, thickness: 1),
+          _buildAmountRow("Total:", "\₹${finalTotal.toStringAsFixed(2)}",
+              isTotal: true),
+        ],
       ),
     );
   }
@@ -232,44 +354,35 @@ class _MyOrdersDetailViewState extends State<MyOrdersDetailView> {
     );
   }
 
-  // Dummy methods — you can adjust based on your logic
   String getPaymentStatus(Map<String, dynamic> order) =>
-      order["isPaid"] == true ? "Paid" : "Unpaid";
+      order["paymentStatus"] == "Completed" ? "Paid" : "Unpaid";
 
   Color getPaymentStatusColor(Map<String, dynamic> order) =>
-      order["isPaid"] == true ? Colors.green : Colors.red;
+      order["paymentStatus"] == "Completed" ? Colors.green : Colors.red;
 
-  String getOrderStatus(Map<String, dynamic> order) {
-    switch (order["orderStatus"]) {
-      case 0:
-        return "Pending";
-      case 1:
-        return "Accepted";
-      case 2:
-        return "Shipped";
-      case 3:
-        return "Delivered";
-      case 4:
-        return "Cancelled";
-      default:
-        return "Unknown";
-    }
-  }
+  String getOrderStatus(Map<String, dynamic> order) =>
+      order["orderStatus"] ?? "Pending";
 
   Color getOrderStatusColor(Map<String, dynamic> order) {
     switch (order["orderStatus"]) {
-      case 3:
+      case "Delivered":
         return Colors.green;
-      case 4:
+      case "Cancelled":
         return Colors.red;
       default:
         return Colors.orange;
     }
   }
 
-  String getDeliverType(Map<String, dynamic> order) =>
-      (order["deliverType"] ?? "Standard").toString();
-
   String getPaymentType(Map<String, dynamic> order) =>
-      (order["paymentType"] ?? "COD").toString();
+      (order["paymentMode"] ?? "Cash on Delivery").toString();
+
+  Widget _showError(String errorMessage) {
+    return Center(
+      child: Text(
+        errorMessage,
+        style: TextStyle(color: Colors.red, fontSize: 16),
+      ),
+    );
+  }
 }
