@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common_widget/round_button.dart';
+import 'package:grocery_store_flutter/view/account/my_order_view.dart';
 import 'package:grocery_store_flutter/view/main_tab/main_tab_view.dart';
 
 import '../../common/color_extension.dart';
@@ -47,9 +48,9 @@ class OrderAcceptView extends StatelessWidget {
               const Spacer(),
               const Spacer(),
               RoundButton(
-                title: "Track Order",
+                title: "View Order",
                 onPressed: () {
-                  // You can add navigation or tracking logic here.
+                  Get.to(() => MyOrdersView());
                 },
               ),
               TextButton(

@@ -80,7 +80,6 @@ class _SelectPromoCodeViewState extends State<SelectPromoCodeView> {
     }
 
     setState(() {
-      selectedPromoId = promo["id"];
       checkoutController.promoCode.value = promo;
       checkoutController.calculateTotal();
     });

@@ -33,18 +33,17 @@ class CheckoutController extends GetxController {
       // Promo logic...
       double promoDiscount = 0;
       if (promoCode.isNotEmpty) {
-        double discountPercent = promoCode['discount'] ?? 0;
-        double maxDiscount = promoCode['maxDiscount'] ?? 0;
+        double discountPercent = promoCode['discount']?.toDouble() ?? 0;
+        double maxDiscount = promoCode['maxDiscount']?.toDouble() ?? 0;
         promoDiscount =
             (rawSubtotal * discountPercent / 100).clamp(0, maxDiscount);
       }
-
       subtotal.value = rawSubtotal;
       discountAmount.value = promoDiscount;
       shippingCharge.value = cartItems.isNotEmpty ? 50.0 : 0.0;
       totalPrice.value = rawSubtotal - promoDiscount + shippingCharge.value;
     } catch (e) {
-      print("Error calculating total: $e");
+      Get.snackbar("message", '${e}');
     }
   }
 

@@ -5,7 +5,8 @@ import '../../common/color_extension.dart';
 import '../../common_widget/round_button.dart';
 
 class WriteReviewView extends StatefulWidget {
-  final Function(double, String) didSubmit;
+  final Future<void> Function(double, String)
+      didSubmit; // Make this return Future
   const WriteReviewView({super.key, required this.didSubmit});
 
   @override
@@ -15,6 +16,7 @@ class WriteReviewView extends StatefulWidget {
 class _WriteReviewViewState extends State<WriteReviewView> {
   double ratingVal = 5.0;
   TextEditingController txtMessage = TextEditingController();
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +40,7 @@ class _WriteReviewViewState extends State<WriteReviewView> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const SizedBox(width: 40), // Spacer for balance
+                  const SizedBox(width: 40),
                   Text(
                     "Write A Review",
                     style: TextStyle(
@@ -49,7 +51,7 @@ class _WriteReviewViewState extends State<WriteReviewView> {
                   ),
                   IconButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      if (!isLoading) Navigator.pop(context);
                     },
                     icon: Icon(Icons.cancel, color: TColor.primary, size: 28),
                   ),
@@ -57,7 +59,7 @@ class _WriteReviewViewState extends State<WriteReviewView> {
               ),
               const SizedBox(height: 15),
 
-              // Star rating bar
+              // Rating bar
               RatingBar.builder(
                 initialRating: ratingVal,
                 minRating: 1,
@@ -77,7 +79,7 @@ class _WriteReviewViewState extends State<WriteReviewView> {
               ),
               const SizedBox(height: 15),
 
-              // Review text field
+              // Review text
               TextField(
                 controller: txtMessage,
                 maxLines: 5,
@@ -96,13 +98,26 @@ class _WriteReviewViewState extends State<WriteReviewView> {
               ),
               const SizedBox(height: 20),
 
-              // Submit button
-              RoundButton(
-                title: "Submit",
-                onPressed: () {
-                  widget.didSubmit(ratingVal, txtMessage.text.trim());
-                },
-              ),
+              // Submit button or loading indicator
+              isLoading
+                  ? const CircularProgressIndicator()
+                  : RoundButton(
+                      title: "Submit",
+                      onPressed: () async {
+                        setState(() {
+                          isLoading = true;
+                        });
+
+                        await widget.didSubmit(
+                          ratingVal,
+                          txtMessage.text.trim(),
+                        );
+
+                        if (mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
+                    ),
             ],
           ),
         ),

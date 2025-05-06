@@ -5,16 +5,19 @@ import 'package:grocery_store_flutter/common_widget/round_button.dart';
 import 'package:grocery_store_flutter/controllers/category_controller.dart';
 import 'package:grocery_store_flutter/controllers/filter_controller.dart';
 
-class FilterView extends StatelessWidget {
+class FilterView extends StatefulWidget {
+  const FilterView({super.key});
+
+  @override
+  State<FilterView> createState() => _FilterViewState();
+}
+
+class _FilterViewState extends State<FilterView> {
   final FilterController filterController = Get.find<FilterController>();
   final CategoryController categoryController = Get.find<CategoryController>();
 
-  FilterView({super.key});
-
   @override
   Widget build(BuildContext context) {
-    categoryController.fetchCategories(); // Load categories once
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(

@@ -29,23 +29,21 @@ class _SplashViewState extends State<SplashView> {
     final token = prefs.getString('token');
 
     if (token != null && token.isNotEmpty) {
-      // Token exists → go to MainTabView using Get.offAll
       Get.offAll(() => const MainTabView());
     } else {
-      // Token not found → go to SignInView using Get.offAll
       Get.offAll(() => const SignInView());
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    var media = MediaQuery.sizeOf(context);
     return Scaffold(
-      backgroundColor: TColor.primary,
-      body: Center(
+      body: SizedBox(
+        width: double.infinity,
+        height: double.infinity,
         child: Image.asset(
-          "assets/img/splash_logo.png",
-          width: media.width * 0.7,
+          "assets/img/splash_logo.jpeg",
+          fit: BoxFit.cover, // Fills the screen and crops as needed
         ),
       ),
     );

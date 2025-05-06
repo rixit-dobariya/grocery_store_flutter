@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common/app_constants.dart';
+import 'package:grocery_store_flutter/common/color_extension.dart';
 import 'package:grocery_store_flutter/controllers/cart_controller.dart';
 import 'package:grocery_store_flutter/view/home/product_details_view.dart';
 import 'package:http/http.dart' as http;
@@ -127,21 +128,36 @@ class _WishlistViewState extends State<WishlistView> {
       return const Center(child: Text('Your wishlist is empty'));
     }
 
-    return ListView.builder(
-      itemCount: products.length,
-      itemBuilder: (context, index) {
-        final product = products[index];
-        return Obx(() => WishlistRow(
-              product: product,
-              onPressed: () => removeItem(product["_id"]),
-              onViewDetails: () =>
-                  Get.to(() => ProductDetailsView(product: product)),
-              onAddToCart: () => cartController.addToCart(product["_id"]),
-              isAddToCartLoading:
-                  cartController.loadingProductIds.contains(product["_id"]),
-              isDeleteLoading: deletingProductIds.contains(product["_id"]),
-            ));
-      },
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0.5,
+        centerTitle: true,
+        title: Text(
+          "My Wishlist",
+          style: TextStyle(
+              color: TColor.primaryText,
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
+        ),
+      ),
+      backgroundColor: Colors.white,
+      body: ListView.builder(
+        itemCount: products.length,
+        itemBuilder: (context, index) {
+          final product = products[index];
+          return Obx(() => WishlistRow(
+                product: product,
+                onPressed: () => removeItem(product["_id"]),
+                onViewDetails: () =>
+                    Get.to(() => ProductDetailsView(product: product)),
+                onAddToCart: () => cartController.addToCart(product["_id"]),
+                isAddToCartLoading:
+                    cartController.loadingProductIds.contains(product["_id"]),
+                isDeleteLoading: deletingProductIds.contains(product["_id"]),
+              ));
+        },
+      ),
     );
   }
 }

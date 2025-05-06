@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:grocery_store_flutter/common/app_constants.dart';
 import 'package:grocery_store_flutter/controllers/cart_controller.dart';
 import 'package:grocery_store_flutter/controllers/category_controller.dart';
+import 'package:grocery_store_flutter/view/explore/explore_detail_view.dart';
 import 'package:grocery_store_flutter/view/explore/search_view.dart';
 import 'package:http/http.dart' as http;
 import 'package:grocery_store_flutter/common_widget/category_cell.dart';
@@ -13,7 +14,7 @@ import 'package:grocery_store_flutter/view/home/product_details_view.dart';
 
 import '../../common/color_extension.dart';
 
-class HomeView extends StatefulWidget {
+class HomeView extends StatefulWidget with RouteAware {
   const HomeView({super.key});
 
   @override
@@ -320,7 +321,10 @@ class _HomeViewState extends State<HomeView> {
                                     categoryController.categories[index];
                                 return CategoryCell(
                                   category: category,
-                                  onPressed: () {},
+                                  onPressed: () {
+                                    Get.to(() =>
+                                        ExploreDetailsView(category: category));
+                                  },
                                 );
                               },
                             );
